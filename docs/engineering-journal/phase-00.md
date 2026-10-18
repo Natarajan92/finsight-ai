@@ -236,3 +236,18 @@ made. Test runtimes above are test-run durations, not answer latency measurement
   `uv run --locked pytest --basetemp=.pytest-tmp -q` (65 passed in 2.43s),
   `uv run --locked finsight-smoke`, `uv build`, and `git diff --check` all passed.
   A clean root-level basetemp reproduces the fresh-parent condition safely.
+- Corrected published commit: `61e377e144375d207e91ab92ade2410f9a89d284`.
+  Actual Actions run https://github.com/Natarajan92/finsight-ai/actions/runs/39111532667
+  completed SUCCESS on both Windows and Ubuntu. All individual setup, lock,
+  install, lint, format, unit, smoke and package-build steps succeeded.
+- Actual job logs: Ubuntu job `117628537191` reports 65 passed in 0.84s; Windows
+  job `117628537284` reports 65 passed in 0.81s. Both synthetic smokes report page
+  index 0 and cost unknown; both built the wheel and source distribution.
+- Remote PR creation remains blocked by integration authorization (403) and
+  unauthenticated local PR CLI (401). A complete manual PR body is saved in
+  `docs/reviews/phase-0-pr.md`; no PR is falsely reported as created.
+- Phase 1 base question remains pending. Main was verified unchanged; no stacked
+  branch, merge, deployment, or Phase 1 implementation performed without approval.
+- Before publishing this CI evidence update, reran lock/lint/format, the full suite
+  (65 passed in 1.94s), synthetic smoke and diff whitespace checks; all passed.
+  The runtime and CI configuration are unchanged from the successful remote run.

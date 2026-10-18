@@ -67,4 +67,6 @@
   the existing runner temp directory. Restricted local instructions now use the
   ignored root `.pytest-tmp` path, whose parent exists on a fresh checkout.
 - No runtime code, Python/package pins, source documents or tests were changed.
-- Verification: local full gates and the new remote run are recorded in the journal.
+- Verification: local 65-test suite passed. Corrected commit `61e377e` passed
+  all Windows/Ubuntu steps in run `39111532667`, with 65 tests on each platform,
+  successful smoke, and successful wheel/source builds. See P0-008.

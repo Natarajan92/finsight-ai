@@ -24,8 +24,9 @@ smoke and package build; isolated fresh installation/wheel checks also passed.
 Original selected PDF/JSONL hashes remained unchanged; versioned files passed a
 limited known-secret-pattern, artifact, size and ignore scan.
 
-See latest branch Actions for actual remote status. The first run failed on
-Windows interpreter availability and Linux temp-parent setup; both root causes
+Corrected commit `61e377e` passed [remote CI on Windows and Ubuntu](https://github.com/Natarajan92/finsight-ai/actions/runs/39111532667):
+65 tests per platform, smoke and package builds all passed. The first run failed
+on Windows interpreter availability and Linux temp-parent setup; both root causes
 and corrections are recorded under P0-008 and BUG-003.
 
 ## Risks and evidence
