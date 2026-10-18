@@ -24,14 +24,14 @@ def validate_relative_path(value: str) -> str:
 
 
 class AuditDiagnostic(Contract):
-    code: Literal["duplicate_alias", "outside_metadata_conflict"]
+    code: Literal["duplicate_alias", "outside_metadata_conflict", "readable_encrypted_source"]
     message: NonBlank
     doc_names: tuple[NonBlank, ...] = ()
 
 
 class ExtractionConfig(Contract):
     schema_version: Literal["1"] = "1"
-    extractor_version: NonBlank = "phase1-v2"
+    extractor_version: NonBlank = "phase1-v3"
     sort: Literal[False] = False
     text_flags: NonnegativeInt = 195  # PyMuPDF 1.28.2 TEXTFLAGS_TEXT.
 

@@ -9,7 +9,7 @@ from finsight.ingestion.cache import load_cached
 from finsight.ingestion.manifest import COMPANIES, company_key
 
 from .benchmark import BenchmarkCase
-from .splits import SplitManifest, validate_split_pair
+from .splits import SplitManifest, SplitPolicy, freeze_splits, validate_split_pair
 
 
 def normalize_quote(value: str) -> str:
@@ -30,6 +30,10 @@ def audit_benchmark(
         (*development.question_ids, *holdout.question_ids)
     ):
         raise ValueError("Benchmark IDs differ from frozen membership")
+    policy = SplitPolicy(dataset_sha256=development.dataset_sha256)
+    expected = freeze_splits(cases, policy, development.dataset_sha256, corpus.source_fingerprint)
+    if expected != (development, holdout):
+        raise ValueError("Frozen membership differs from deterministic split policy")
     documents = {document.doc_name: document for document in corpus.documents}
     dev_ids = set(development.question_ids)
     cached = {}

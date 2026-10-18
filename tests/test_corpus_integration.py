@@ -50,6 +50,7 @@ def test_all_canonical_filings_match_immutable_manifest(real_inputs):
         d.company for d in rebuilt.documents
     )
     assert sum(d.code == "duplicate_alias" for d in corpus.diagnostics) == 2
+    assert sum(d.code == "readable_encrypted_source" for d in corpus.diagnostics) == 9
 
 
 def test_every_cached_page_is_complete_without_reparsing(real_inputs, monkeypatch):
@@ -74,6 +75,8 @@ def test_every_cached_page_is_complete_without_reparsing(real_inputs, monkeypatc
         "error": 0,
         "layout_mapping_failed": 0,
         "image_content_without_text": 9,
+        "readable_encrypted_source": 1607,
+        "actualtext_position_warning": 618,
     }
 
 

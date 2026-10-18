@@ -166,3 +166,158 @@ performed for this documentation request.
 - Development QA renders/selections and empty-page renders are retained only in ignored `data/evaluation/phase1-visual-qa/`; detailed development extraction diagnostics remain ignored. Public documentation contains sanitized aggregates and limitations.
 - GitHub connector reverified historical Phase 0 run 39111532667: both Windows/Ubuntu jobs and all gates succeeded. Reconciled the unmerged evidence-only Phase 0 documentation in its journal; this is not a Phase 1 CI result.
 - Phase 1 CI has not run; its workflow retains pinned actions/keyless Windows+Ubuntu checks and adds installed CLI help checks. No Phase 1 push, remote PR, merge, model call, embedding, or holdout RAG run has occurred.
+
+## P1-005 - Independent branch review
+
+- **Actor/category:** Fresh-context Codex review agent (`gpt-6-astra`, high reasoning) / code review under Superpowers executing-plans.
+- **Range:** `310c3146af9b7dcded5e85dbcd91a149324cb871..68ca6dab9d8fe55e86af236d4d8e9fc3f8955d91`.
+- **Critical:** None. **Important:** silent MuPDF repairs/native syntax warnings accepted as success; owner-encrypted empty-user-password PDFs not detected by `needs_pass`; validation accepted checksum-consistent swapped split IDs without recomputing the declared policy.
+- Reviewer reproduced all three with generated PDFs/synthetic cases only and reran unit tests: 133 passed / 1 Windows symlink skip / 4 integrations deselected. No original data, tracked files, frozen IDs, Git index, or branch state was modified by the reviewer.
+- **Minor deferred:** Unmatched nonalias PDFs are omitted without a diagnostic. Preserve metadata-controlled scope; a broader unmatched-source audit is a follow-up, not an automatic corpus expansion.
+- Parent verification found nine actual approved originals with owner encryption, no password required, and copy/accessibility permissions granted. This conflicts with blanket encryption rejection; requested a concrete exception decision while the other fixes proceed.
+- Review findings are engineering feedback, not human approval of implementation results. Corrections and final verification follow; no second independent review is claimed.
+
+## P1-006 - Exact-source encryption exception approved
+
+- **Date/time + timezone:** 2026-10-18 IST; exact message time unavailable.
+- **Actor/category:** Human / scoped policy clarification.
+- **Question context:** The approved plan rejects encrypted files, but American Express 2022 and Boeing 2015-2022 are owner-encrypted, open without a password, and permit copying. Proposed read-only processing of those exact hash-verified files with visible diagnostics; all password-required files still rejected.
+
+### Original answer
+
+> Allow these nine files with diagnostics (Recommended)
+
+- **Human review: REVIEWED.** Limit the exception to these nine original SHA-256 values; do not decrypt/rewrite originals, attempt passwords, change permissions, or allow arbitrary encrypted uploads.
+- Record encryption in manifest/page diagnostics and require copy permission. Unknown encrypted files or any file requiring a password remain failures. The canonical source identities and frozen question memberships must remain unchanged.
+
+### P1-005/P1-006 corrective implementation and verification
+
+- **Correction context:** one pass after review of `68ca6da`, on the existing
+  `feat/phase-1-ingestion` branch. No second independent review is claimed.
+  All three Important severities stand: wrong source acceptance or incorrect
+  development membership would violate the approved ingestion/evaluation boundary.
+- **RED:** `uv run --locked pytest tests/test_pdf_integrity.py tests/test_benchmark_audit.py tests/test_benchmark_splits.py::test_synthetic_policy_fingerprint_is_pinned_across_platforms --basetemp=.pytest-tmp -q`
+  returned **8 failed, 3 passed in 2.25s**. Repaired xref and syntax-warning pages
+  were accepted/cached; unknown/readable encryption bypassed policy and diagnostics;
+  a checksum-consistent within-stratum swap was accepted by direct audit and CLI.
+- **Fix:** reject repair/open warnings, detect encryption using metadata, enforce
+  the exact nine-source SHA-256 allowlist and copy permission, and disclose the
+  approved exception. Recompute the fixed split policy before accessing development
+  page annotations/caches. Never persist failed extraction; keep prior diagnostics
+  unchanged when membership validation fails. Synthetic cross-platform split hash
+  is pinned; real IDs/algorithm stay unchanged.
+- **First GREEN:** same focused command returned **11 passed in 2.24s**. Whole
+  unit suite reached 141 passed / 1 Windows symlink skip / 4 integrations deselected.
+  Ruff initially reported two style errors (line length/import order); both were
+  corrected and subsequent lint/format checks pass.
+- **Failed broad-warning hypothesis:** strict rejection of every native page warning
+  made full extraction return **618 errors**, CLI exit 1; failed documents were not
+  cached. Source-only probes (no benchmark labels) showed the exact warning
+  `ActualText with no position. Text may be lost or mispositioned.` across nine
+  filings. This is text-quality uncertainty and must be visible, not silently lost
+  or misrepresented as a syntax error. No extraction flags/text were changed.
+- **Additional RED:** `uv run --locked pytest tests/test_pdf_integrity.py::test_actualtext_position_warning_preserves_available_text_with_visible_gap --basetemp=.pytest-tmp -q`
+  returned **1 failed in 0.65s** on a generated marked-content PDF. The narrow
+  classification preserves available text and records `actualtext_position_warning`;
+  all syntax/unknown warnings still fail. The focused correction command then
+  returned **12 passed in 2.12s**. See BUG-005 through BUG-007 and ADR 0002.
+- **P1-006 manifest migration:** rebuilt into a candidate, asserted all 53
+  `DocumentManifest` entries, metadata/source hashes, and previous alias/conflict
+  diagnostics equal the existing artifact, then added nine approved-encryption
+  diagnostics only. No general overwrite/force option was added.
+- **Full v3 extraction command:**
+  `uv run --locked finsight-ingest extract --manifest data/manifests/financebench-selected.json --pdf-root source-data/pdfs --cache-root data/cache/pages`
+  returned **9,504 pages; 9,486 nonempty; 18 empty; 0 fatal errors; 0 layout failures;
+  9 image-only diagnostics; 618 ActualText-position diagnostics; 1,607 readable
+  encrypted-page diagnostics**. Process-global warnings are handled serially.
+- Warning distribution by filing: Amcor 2019 73; American Express 2022 1;
+  Johnson & Johnson 2015 98, 2016 100, 2017 105, 2018 115, 2019 123, 2022 2;
+  PepsiCo 2022 1. This is corpus-wide source QA, not holdout performance feedback.
+- Per-document canonical text fingerprints assert that **all 9,504 raw page texts
+  remain identical to v1**. The exact source/split fingerprints in the data audit
+  remain unchanged. Explicit integration verifies the 55 originals and both JSONL
+  hashes, all cached pages without reparsing, and split replay.
+- **Final unit command:** `uv run --locked pytest -m "not integration" --basetemp=.pytest-tmp -q`
+  returned **142 passed, 1 skipped, 4 deselected in 7.48s**. The sole skip is host
+  symlink privilege, explicitly reported. No paid/network tests were substituted.
+- **Final local integration:** set `FINSIGHT_SOURCE_PDF_DIR=source-data/pdfs` and
+  `FINSIGHT_BENCHMARK_DIR=source-data/data`, then
+  `uv run --locked pytest -m integration tests/test_corpus_integration.py --basetemp=.pytest-tmp -q`:
+  **4 passed in 5.74s**.
+- **Development audit:** the documented `finsight-benchmark-audit validate` command
+  passed with **17/41** normalized exact quote matches. No new holdout quote feedback,
+  retrieval/generation evaluation, embeddings, provider/model calls, cost or latency
+  measurements. Unknown economics remain unknown.
+- **Environment/build:** `uv lock --check`, `uv sync --locked --group dev`,
+  `uv run --locked ruff check .`, `uv run --locked ruff format --check .`,
+  `uv run --locked finsight-smoke`, and `uv build` passed. Smoke output remains
+  `synthetic_contract_roundtrip`, status `passed`, page zero, cost `unknown`.
+- Reinstalled the built wheel into the separate runtime-only environment using
+  `uv pip install --python <wheel-env>/Scripts/python.exe --reinstall-package finsight-ai dist/finsight_ai-0.1.0-py3-none-any.whl`.
+  `uv pip check --python <wheel-env>/Scripts/python.exe` found **9 compatible
+  distributions**. From an empty cwd, isolated Python `-I` imported site-packages,
+  generated **19 schemas**, checked parser versions **1.28.2**, extractor **v3**,
+  nine allowlisted hashes, runtime/evaluation import isolation, synthetic smoke,
+  and both CLI help entry points successfully.
+- **Human implementation-result review: PENDING.** P1-004/P1-006 approve the design
+  and scoped exception, not a completed-code review. No Phase 1 publication,
+  merge, deployment, Phase 2 implementation, or remote CI run was authorized.
+
+### Execution rulings and review scope
+
+The following preserves the execution ledger before its plan-specific scratch
+workspace is removed. These are agent rulings, not invented human reasoning.
+
+1. Use the human-approved PyMuPDF 1.28.2; retain repository MIT and document
+   third-party terms separately. Cost if wrong: reassess terms for a different use
+   or distribution; no purchase/relicensing is authorized.
+2. Expose source-only `load_cached` for read-only offline QA instead of parsing
+   private envelopes or re-extracting based on annotations. Cost if wrong: wider API
+   maintenance.
+3. Flag image-only pages and version caches; defer OCR. Cost if wrong: nine scanned
+   pages remain unavailable to text retrieval.
+4. Preserve the exact ActualText-position warning as visible quality uncertainty;
+   reject syntax/unknown warnings. Cost if wrong: affected text may be incomplete
+   or misplaced; 618 pages require that limitation to remain visible.
+5. Reviewer did not certify OCR/table-cell semantics. Keep those follow-ups outside
+   Phase 1 rather than infer coverage from spot checks. Cost: incomplete text/table
+   relationships remain.
+6. Reviewer did not judge later RAG or four-arm quality. Keep implementation within
+   Phase 1. Cost: retrieval/answer performance remains unmeasured.
+7. Reviewer did not judge holdout quality. Preserve development-only feedback and
+   the once-only later holdout gate. Cost: holdout quality remains unknown now.
+8. Reviewer did not run remote CI. Report local Windows evidence only until an
+   approved push. Cost: remote Windows/Linux compatibility remains unverified.
+9. Reviewer did not provide legal judgment. Human dependency approval is recorded
+   without calling it a legal finding. Cost: different distribution/use may require
+   separate license review.
+10. Reviewer did not judge general-purpose allocation scalability/concurrent writers.
+    Keep the fixed 52-case, serial local scope. Cost: larger/parallel workloads need
+    separate engineering.
+
+**Minor (deferred):** unmatched nonalias PDFs lack an explicit diagnostic. Metadata
+continues to control membership; report rather than automatically expand corpus.
+The final corrective commit contains these records and corresponding regressions;
+the final checkpoint supplies its exact SHA.
+
+### Final local commit gates
+
+- Repeated real `manifest` and `split` commands passed idempotently: 53 sources,
+  nine approved encryption diagnostics, expected aliases/conflict, identical
+  source and 36/16 split fingerprints. No general overwrite option exists.
+- Checked **30 local documentation link targets**, **14 unique prompt-registry
+  rows**, and all **four public JSON artifacts** for forbidden gold/annotation
+  fields. Built wheel/source artifacts contain the packaged source policy and
+  exclude PDFs, JSONL, renders, bytecode, private environment and source-data.
+- `git diff --check` and `git diff --cached --check` passed. Diff against merged
+  base confirms later-phase package boundaries unchanged.
+- Explicitly staged **20 allowlisted correction/documentation files**. The limited
+  staged secret-pattern, sub-1-MB file-size, source/generated-artifact, and ignored
+  path scan passed for all 20. Raw PDFs/JSONL, caches, local QA, `.env`, environments,
+  build output and plan scratch remain ignored/untracked. This is a targeted scan,
+  not a claim that every possible secret format has been detected.
+- Staged correction before this gate-record addition: 698 insertions / 38 deletions;
+  native PDF policy, split replay, nine added unit regressions, diagnostics, and
+  documentation only. The local corrective commit includes the final gate record.
+- Plan scratch is disposable only after this correction is committed; retain local
+  source caches and ignored QA evidence, and leave sibling plan workspaces alone.

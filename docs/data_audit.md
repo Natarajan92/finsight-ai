@@ -47,9 +47,20 @@ and payload integrity before reuse; interrupted writes use atomic replacement.
 
 - **9,504 page records:** 9,486 nonempty, 18 text-empty, zero parser errors, zero
   block-mapping failures.
+- Nine owner-encrypted originals (American Express 2022; Boeing 2015-2022) open
+  without passwords and permit copying. P1-006 approves only their exact hashes.
+  Manifest diagnostics identify all nine; 1,607 page records disclose readable
+  encryption. Password-required, unknown encrypted, repaired, native syntax-error,
+  and unknown-warning sources fail validation. Originals remain unchanged; no
+  decryption is performed.
+- **618 pages in nine filings** emit the specific native ActualText-position
+  warning, indicating possible lost or mispositioned text. Available raw text is
+  preserved and flagged `actualtext_position_warning`; `ok` means nonempty extraction,
+  not complete semantic coverage. No warning is silently discarded. No extraction
+  flags or text were changed to silence these warnings; all other warnings fail.
 - Visual review of all 18 text-empty pages found **nine blank pages and nine
   scanned Amcor 2020 appendix pages** containing deferred-compensation amendments.
-  `phase1-v2` adds `image_content_without_text` diagnostics for the nine image-only
+  `phase1-v3` retains `image_content_without_text` diagnostics for the nine image-only
   pages. They remain in the manifest/cache as explicit coverage gaps. OCR is not
   implemented, and these pages cannot support text retrieval yet.
 - Every one of the 59 annotated evidence references has a valid zero-based page
@@ -66,6 +77,8 @@ and payload integrity before reuse; interrupted writes use atomic replacement.
   **zero U+FFFD characters** in all extracted pages; nonbreaking spaces, em/en
   dashes, and curly punctuation are present in the stored text. The issue was
   Windows terminal decoding, so no speculative source normalization was applied.
+  Default flags use character IDs for unknown Unicode; zero U+FFFD therefore does
+  not independently prove correct character decoding or complete text coverage.
 
 Development-only annotation diagnostics contain **41 references, 17 exact matches**
 after Unicode NFKC/case/whitespace normalization, and 24 nonmatches. Matching is a
@@ -104,6 +117,9 @@ appear in both splits. Three singleton labels cannot appear in both. Twelve of
 extraction questions are both in development under the constrained optimum.
 Source-order reversal reproduces the same IDs/fingerprints. A different existing
 frozen split cannot be overwritten by preparation commands.
+Validation also recomputes the policy before development feedback, rejecting
+checksum-consistent altered membership. The real and synthetic split fingerprints
+are pinned in tests; algorithm and original memberships are unchanged.
 
 Development questions reference 17 filings and holdout questions 10, with **eight
 filings shared**. **The same filings may appear in both splits: this evaluates
@@ -142,3 +158,9 @@ all cached pages without reparsing, benchmark joins, and frozen split reproducti
 Fresh isolated wheel verification covers all 19 exported contract schemas, runtime
 imports, synthetic smoke, and both installed CLI entry points from an empty cwd.
 Phase 1 GitHub Actions remains unexecuted until an approved push.
+
+Independent review and correction evidence are in
+[P1-005](engineering-journal/phase-01.md#p1-005---independent-branch-review) and the
+[review checkpoint](reviews/phase-1.md). One Minor finding remains deferred:
+unmatched nonalias PDFs lack an explicit diagnostic. Metadata controls corpus
+membership; this does not authorize adding those sources.

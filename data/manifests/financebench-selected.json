@@ -8,6 +8,69 @@
       "message":"Conflicting metadata outside selected corpus"
     },
     {
+      "code":"readable_encrypted_source",
+      "doc_names":[
+        "AMERICANEXPRESS_2022_10K"
+      ],
+      "message":"Hash-approved owner encryption; no password required; copying permitted"
+    },
+    {
+      "code":"readable_encrypted_source",
+      "doc_names":[
+        "BOEING_2015_10K"
+      ],
+      "message":"Hash-approved owner encryption; no password required; copying permitted"
+    },
+    {
+      "code":"readable_encrypted_source",
+      "doc_names":[
+        "BOEING_2016_10K"
+      ],
+      "message":"Hash-approved owner encryption; no password required; copying permitted"
+    },
+    {
+      "code":"readable_encrypted_source",
+      "doc_names":[
+        "BOEING_2017_10K"
+      ],
+      "message":"Hash-approved owner encryption; no password required; copying permitted"
+    },
+    {
+      "code":"readable_encrypted_source",
+      "doc_names":[
+        "BOEING_2018_10K"
+      ],
+      "message":"Hash-approved owner encryption; no password required; copying permitted"
+    },
+    {
+      "code":"readable_encrypted_source",
+      "doc_names":[
+        "BOEING_2019_10K"
+      ],
+      "message":"Hash-approved owner encryption; no password required; copying permitted"
+    },
+    {
+      "code":"readable_encrypted_source",
+      "doc_names":[
+        "BOEING_2020_10K"
+      ],
+      "message":"Hash-approved owner encryption; no password required; copying permitted"
+    },
+    {
+      "code":"readable_encrypted_source",
+      "doc_names":[
+        "BOEING_2021_10K"
+      ],
+      "message":"Hash-approved owner encryption; no password required; copying permitted"
+    },
+    {
+      "code":"readable_encrypted_source",
+      "doc_names":[
+        "BOEING_2022_10K"
+      ],
+      "message":"Hash-approved owner encryption; no password required; copying permitted"
+    },
+    {
       "code":"duplicate_alias",
       "doc_names":[
         "AMCOR_2022_8K_2022-04-26",

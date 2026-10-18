@@ -8,7 +8,7 @@ from finsight.contracts.documents import DocumentManifest
 from finsight.contracts.ingestion import AuditDiagnostic, CorpusManifest, validate_relative_path
 
 from .fingerprints import document_id, sha256_file, source_fingerprint
-from .pdf import inspect_pdf
+from .pdf import inspect_pdf_details
 
 COMPANIES = ("AMD", "American Express", "PepsiCo", "Boeing", "Amcor", "Johnson & Johnson")
 _METADATA_FIELDS = {"doc_name", "company", "gics_sector", "doc_type", "doc_period", "doc_link"}
@@ -69,7 +69,17 @@ def build_manifest(
         relative = paths[name][0].relative_to(pdf_root).as_posix()
         path = safe_pdf_path(pdf_root, relative)
         digest = sha256_file(path)
-        page_count = inspect_pdf(path)
+        inspection = inspect_pdf_details(path)
+        if inspection.encryption_method:
+            diagnostics.append(
+                AuditDiagnostic(
+                    code="readable_encrypted_source",
+                    message=(
+                        "Hash-approved owner encryption; no password required; copying permitted"
+                    ),
+                    doc_names=(name,),
+                )
+            )
         if sha256_file(path) != digest:
             raise ValueError(f"PDF changed during inspection: {name}")
         period = record["doc_period"]
@@ -85,7 +95,7 @@ def build_manifest(
                 source_url=record["doc_link"],
                 local_path=relative,
                 sha256=digest,
-                page_count=page_count,
+                page_count=inspection.page_count,
                 ingestion_version=ingestion_version,
             )
         )

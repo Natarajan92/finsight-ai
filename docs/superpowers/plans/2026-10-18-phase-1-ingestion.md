@@ -32,7 +32,7 @@
 ## Review focus
 
 1. Ambiguous joins, conflicting metadata, or a source path escaping the PDF root must fail visibly; Task 1 owns these tests.
-2. A damaged, encrypted, or unexpectedly changed PDF must not produce a successful manifest/extraction result; Tasks 1 and 2 own these tests.
+2. A damaged, password-required, unknown encrypted, or unexpectedly changed PDF must not produce a successful manifest/extraction result; Tasks 1 and 2 own these tests. P1-006 approves exactly nine readable owner-encrypted originals by hash, with copy permission and visible diagnostics; no originals are rewritten. Native syntax/unknown warnings fail. The exact ActualText-position warning preserves available text with an explicit quality-gap diagnostic.
 3. Table columns, year/unit headings, negatives, Unicode, and block offsets must survive extraction or receive explicit diagnostics; Task 2 owns these tests.
 4. Corrupt/stale caches and interrupted writes must never silently reuse wrong pages; Task 2 owns these tests.
 5. Rare/missing reasoning labels, source-order changes, split rerolls, and annotation injection must not undermine reproducibility or isolation; Task 3 owns these tests.
@@ -116,7 +116,7 @@ The report must state: **The same filings may appear in both splits. This evalua
 - [x] Write failing tests using small generated financial PDFs: page zero, blank pages, multiple years, units, parentheses/minus signs, Unicode supported by the fixture font, multi-column text, and ordered source offsets.
 - [x] Run `uv run --locked pytest tests/test_pdf_extraction.py tests/test_page_cache.py --basetemp=.pytest-tmp`; verify the expected failures.
 - [x] Extract original-order text with explicit `TEXTFLAGS_TEXT`, `sort=False`; obtain text blocks using the same configuration. Preserve raw page text without whitespace, sign, or numeric normalization. Store only text blocks whose offsets can be proven against raw text; retain raw text and report layout-mapping failure rather than fabricating spans.
-- [x] Preserve `ok`, `empty`, and `error` page outcomes and page indices. Fail the command on unreadable/encrypted sources, source hash/page-count changes, or extraction errors; do not silently drop pages. Blank pages receive explicit diagnostics.
+- [x] Preserve `ok`, `empty`, and `error` page outcomes and page indices. Fail the command on unreadable/unapproved encrypted sources, repaired PDFs, source hash/page-count changes, or extraction errors; do not silently drop pages. Blank pages receive explicit diagnostics. The P1-006 hash/copy-permission exception is visible; the exact ActualText-position warning flags possible text loss without changing raw text. Syntax/unknown warnings fail and are not cached.
 - [x] Cache validated per-document pages under ignored `data/cache/pages/`, keyed by PDF SHA, extraction config, PyMuPDF/MuPDF versions, and cache schema. Validate identity, page completeness/order, and payload integrity before reuse; rebuild corrupt/stale caches from the verified PDF. Write via same-directory temporary file and atomic replacement.
 - [x] Test cache hits without parser calls, each invalidation input, truncated/wrong-document cache data, interrupted writes, and block/source mismatches. Test that annotation changes cannot affect extraction/cache output.
 - [x] Run focused tests, unchanged Phase 0 tests, schema checks, and synthetic CLI smoke. Record actual outcomes and commit only this verified scope.
@@ -159,7 +159,7 @@ The report must state: **The same filings may appear in both splits. This evalua
 - [x] Reconcile the existing Phase 0 journal/CI evidence with the successful published run, without pulling unrelated code or inventing PR authorization. The merged base contains the code/CI fix; one later Phase 0 evidence-only commit was not part of the merge.
 - [x] Run the commands below; inspect all results, staged contents, secret patterns, ignored artifacts, and large files. Record exact failures/corrections and final outcomes before each commit. Source PDFs, annotations, caches, and private environment files must stay untracked.
 - [x] Repeat locked installation and the synthetic smoke from a fresh temporary project environment; record interpreter/parser versions and wheel-build results. Keep its environment/cache outside committed artifacts.
-- [x] Return the eight-part checkpoint required by `project.md`, with actual commit SHA, journal links, test counts, fingerprints, limitations, and next recommendation. Stop for human review; do not push or start Phase 2.
+- [x] Prepare the eight-part checkpoint required by `project.md`, with actual commit SHA, journal links, test counts, fingerprints, limitations, and next recommendation. Stop for human review; do not push or start Phase 2.
 
 ## Verification commands
 
@@ -187,7 +187,7 @@ uv run --locked pytest -m integration tests/test_corpus_integration.py --basetem
 
 The integration test reads `FINSIGHT_SOURCE_PDF_DIR=source-data/pdfs` and `FINSIGHT_BENCHMARK_DIR=source-data/data`; it must explicitly skip with a reason when local inputs are absent. Standard CI runs synthetic tests only. CI for Phase 1 is unexecuted until an approved push actually triggers it.
 
-The earlier Phase 0 checkpoint had 65 passing tests. Local Phase 1 verification reached 133 passing unit tests (one explicit Windows symlink skip; four integration checks deselected), four passing real-corpus checks, fresh installation/isolated wheel smoke, and full-corpus extraction/cache verification. Extractor `phase1-v2` explicitly flags nine scanned appendix pages as text-coverage gaps without OCR. Phase 1 remote CI is **not executed** until an approved push. Final independent review is the next gate; its findings and corrections will be recorded in the journal.
+The earlier Phase 0 checkpoint had 65 passing tests. Final local Phase 1 verification reached 142 passing unit tests (one explicit Windows symlink skip; four integration checks deselected), four passing real-corpus checks, fresh installation/isolated wheel smoke, and full-corpus extraction/cache verification. One independent whole-branch review found three Important issues; all were corrected with failing regressions first. Extractor `phase1-v3` flags nine scanned appendix pages, 618 ActualText-position warnings, and 1,607 pages in the nine P1-006 approved encrypted sources. All 9,504 raw page texts remain unchanged from v1. Source entries, original hashes, and frozen IDs are unchanged. One Minor unmatched-source diagnostic remains deferred. Phase 1 remote CI is **not executed** until an approved push. See the journal and review checkpoint; final human implementation review remains pending.
 
 ## Decisions, risks, and approval boundary
 
@@ -199,4 +199,4 @@ The earlier Phase 0 checkpoint had 65 passing tests. Local Phase 1 verification 
 6. **GitHub:** a local Phase 1 branch exists. The previous PR connector returned 403; public read access and git push worked for Phase 0, and the human merged PR #1. Reverify publication permissions only after Phase 1 push approval.
 7. **Time box:** target 2-2.5 hours for approved implementation/verification, subject to corpus extraction findings. This is an estimate, not a passed quality gate or deadline guarantee.
 
-**Approval and checkpoint:** The human approved this plan and PyMuPDF in P1-004. Native task-by-task local implementation proceeds through a final independent review. Phase 1 publication and later phases remain separate approval boundaries.
+**Approval and checkpoint:** The human approved this plan and PyMuPDF in P1-004, then the nine-source readable encryption exception in P1-006. Native task-by-task local implementation and one independent review/correction pass are complete. Phase 1 publication and later phases remain separate approval boundaries.

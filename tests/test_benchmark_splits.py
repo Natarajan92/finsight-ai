@@ -91,3 +91,12 @@ def test_manifest_membership_is_only_ids_and_metadata(benchmark_fixture):
     )
     with pytest.raises(ValueError):
         SplitManifest.model_validate({**dev.model_dump(), "answer": "injected"})
+
+
+def test_synthetic_policy_fingerprint_is_pinned_across_platforms(benchmark_fixture):
+    path, corpus, _ = benchmark_fixture
+    cases = load_benchmark(path, corpus)
+    dev, _ = freeze_splits(cases, SplitPolicy(dataset_sha256="a" * 64), "a" * 64, "c" * 64)
+    assert (
+        dev.split_fingerprint == "832eab2df870078356442913225d27fda1c7e0009661f564b1b680fd651fe4f2"
+    )

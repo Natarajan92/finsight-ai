@@ -26,8 +26,13 @@ Provider smoke tests require separate credential/spend approval. Targets in
   companies represented in both. Manifests are in `configs/evaluation/`.
 - Shared split fingerprint: `e6ec481633654b779721f1d94c7aa05a65e43c9f37deae177819658d2b665431`.
 - Full 53-filing corpus fingerprint: `7376d03d8183077b92ed98b8c4e3a584fefd02202b75feba82cdc13b2519fad3`.
-- PyMuPDF/MuPDF 1.28.2, extractor `phase1-v2`, original-order text/blocks. Nine
+- PyMuPDF/MuPDF 1.28.2, extractor `phase1-v3`, original-order text/blocks. Nine
   scanned appendix pages have explicit image-only coverage gaps; no OCR is run.
+- P1-006 permits nine exact readable owner-encrypted source hashes with copying
+  permission and diagnostics. Strict repair/native-warning checks invalidate old
+  caches; neither source identities nor frozen question IDs change.
+- 618 pages have explicit ActualText-position uncertainty; available raw text is
+  retained unchanged. These diagnostics do not establish complete extraction.
 - Development annotation check: 17/41 normalized exact quote matches. This is an
   extraction diagnostic, not retrieval correctness, faithfulness, or an experiment arm.
 - Eight question-linked filings appear in both splits. This evaluates unseen

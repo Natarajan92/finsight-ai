@@ -101,9 +101,18 @@ uv run --locked finsight-benchmark-audit validate --questions source-data/data/f
 Re-running preparation is idempotent. A different source manifest or frozen split
 is refused; review a new dataset/split version instead of overwriting it. Cache
 identity includes the source hash, extraction configuration, and parser/backend
-versions. Corrupt/stale caches rebuild from the verified PDF. Extractor `phase1-v2`
+versions. Corrupt/stale caches rebuild from the verified PDF. Extractor `phase1-v3`
 flags image content without extractable text; no OCR or table-cell reconstruction
 runs. Nine scanned Amcor appendix pages remain documented text-coverage gaps.
+Repaired PDFs, native syntax errors, and unknown warnings fail validation. The
+specific ActualText-position warning preserves available text with an explicit
+possible-loss diagnostic (618 pages); those pages are not certified complete.
+Password-required and
+unknown encrypted PDFs are rejected. P1-006 approves only the nine exact hashes
+for American Express 2022 and Boeing 2015-2022, which open without passwords and
+permit copying; manifest and page diagnostics disclose this exception. Original
+files are never decrypted or rewritten. Benchmark validation recomputes the
+declared split policy before producing development feedback.
 
 To verify local sources and cached pages without provider calls:
 
