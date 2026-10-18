@@ -1,8 +1,67 @@
 """Synthetic fixtures only. Unit tests must never connect to a service."""
 
+import json
 import socket
 
 import pytest
+
+
+@pytest.fixture
+def pdf_factory(tmp_path):
+    import pymupdf
+
+    root = tmp_path / "pdfs"
+    root.mkdir()
+
+    def create(name="AMD_2022_10K", texts=None, password=None):
+        path = root / f"{name}.pdf"
+        with pymupdf.open() as document:
+            for text in (
+                texts
+                if texts is not None
+                else [
+                    "Financial statements 2022 2021\nUSD millions\n"
+                    "Revenue 1,000 900\nLoss (25) -10\nNote 1: café",
+                    "",
+                ]
+            ):
+                page = document.new_page()
+                if text:
+                    page.insert_text((50, 70), text)
+            options = (
+                {}
+                if password is None
+                else {
+                    "encryption": pymupdf.PDF_ENCRYPT_AES_256,
+                    "owner_pw": password,
+                    "user_pw": password,
+                }
+            )
+            document.save(path, **options)
+        return path
+
+    return create
+
+
+@pytest.fixture
+def metadata_factory(tmp_path):
+    def create(records=None):
+        path = tmp_path / "metadata.jsonl"
+        if records is None:
+            records = [
+                {
+                    "doc_name": "AMD_2022_10K",
+                    "company": "AMD",
+                    "gics_sector": None,
+                    "doc_type": "10K",
+                    "doc_period": 2022,
+                    "doc_link": None,
+                }
+            ]
+        path.write_text("".join(json.dumps(row) + "\n" for row in records), encoding="utf-8")
+        return path
+
+    return create
 
 
 @pytest.fixture(autouse=True)
