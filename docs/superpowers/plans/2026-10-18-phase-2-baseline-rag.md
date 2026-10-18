@@ -184,7 +184,7 @@ Test `test_unicode_and_repeated_rows_keep_correct_occurrence`, `test_all_source_
 
 Call only `https://api.tokenfactory.nebius.com/v1/embeddings`, with automatic transport retries/redirects disabled, `encoding_format='float'`, the configured model, dimension 4096 and explicit `service_tier='default'`. Never select surge/over-limit billing. Batch at most 16 documents; count all submitted inputs. Documents have no retrieval instruction. Freeze query format as `Instruct: Given a financial question, retrieve passages from company filings that answer the question.\nQuery:{question}`. Confirm provider prefix handling during preflight before accepting a live config; do not silently double-prefix.
 
-- [ ] **Step 1 - Write failing mocked-transport tests**, with fake live dimension 4096 and smaller explicitly injected synthetic test profiles:
+- [x] **Step 1 - Write failing mocked-transport tests**, with fake live dimension 4096 and smaller explicitly injected synthetic test profiles:
 
 ```python
 assert first_vectors == second_vectors
@@ -194,10 +194,10 @@ assert ledger.snapshot().reserved_usd == Decimal("0")  # known usage settled
 ```
 
 Assert request body/endpoint/tier/prefix, indices reordered correctly, no automatic redirects or retries, missing/duplicate result indices rejected, NaN/Inf/zero/wrong-dimension vectors rejected, tampered cache rejection, normalization to unit length, successful-batch persistence after later failure, and no second request when budget authorization fails. Preserve raw returned usage even for malformed vectors; cache no malformed vectors.
-- [ ] **Step 2 - Run RED:** `uv run --locked pytest tests/rag/test_embedding_cache.py tests/rag/test_nebius.py --basetemp=.pytest-tmp/p2 -q`.
-- [ ] **Step 3 - Implement the HTTP adapter/cache.** Cache key hashes exact submitted text, role, instructions, provider/model/revision, dimension and normalization. Validate count/index/model/vector correspondence before use. Use atomic writes with payload fingerprints; retain usage via the dispatcher before shape validation. No generic OpenAI endpoint/key defaults.
-- [ ] **Step 4 - Run GREEN:** same tests with sockets blocked and exact call/reservation assertions. Repeat a simulated interrupted embedding job and verify only uncached batches dispatch.
-- [ ] **Step 5 - Common gate and commit:** `feat: cache budgeted Nebius embeddings`.
+- [x] **Step 2 - Run RED:** `uv run --locked pytest tests/rag/test_embedding_cache.py tests/rag/test_nebius.py --basetemp=.pytest-tmp/p2 -q`.
+- [x] **Step 3 - Implement the HTTP adapter/cache.** Cache key hashes exact submitted text, role, instructions, provider/model/revision, dimension and normalization. Validate count/index/model/vector correspondence before use. Use atomic writes with payload fingerprints; retain usage via the dispatcher before shape validation. No generic OpenAI endpoint/key defaults.
+- [x] **Step 4 - Run GREEN:** same tests with sockets blocked and exact call/reservation assertions. Repeat a simulated interrupted embedding job and verify only uncached batches dispatch.
+- [x] **Step 5 - Common gate and commit:** `feat: cache budgeted Nebius embeddings`.
 
 ## Task 5: Complete persistent indexes and provenance-checked filtered retrieval
 

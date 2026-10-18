@@ -345,3 +345,11 @@ from resolution alone. No provider credits have been consumed in this planning.
 - GREEN: nine focused tests passed in 1.37s, including genuine locally trained BPE/Unicode offsets and re-encoding, exact 0:400/340:740/680:800 character-token windows, repeated rows, full character coverage, stable IDs, page isolation, empty/error pages and visible table-cut diagnostics.
 - Explicit tokenizer preparation downloads only three pinned JSON files into staging; offline loading verifies asset bytes, URLs, revision and library version without downloads. No fallback token estimate replaces unavailable assets. A source that cannot form a nonblank bounded exact window fails explicitly.
 - Gates: whole keyless suite, Ruff check/format (90 files), original smoke/CLI help, locked sync/check, package build and diff check passed. No public tokenizer preparation or model call occurred yet; actual production asset verification remains Task 10.
+
+### Task 4 - Guarded Nebius embeddings and persistent cache
+
+- RED: 13 expected missing-adapter fixture failures. GREEN: 15 passed in 5.27s using HTTPX MockTransport and blocked external sockets.
+- Standard LangChain embedding interface with immutable per-run binding; explicit Nebius endpoint/default tier/dimensions and query-only instruction. Each physical batch reserves locally counted tokens plus 64 per input; HTTP timeout derives from the remaining invocation deadline. Redirects are refused; transport retries remain disabled in the owned factory.
+- Cache identities bind exact submitted-text hash, document/query role, model/revision/dimension/instruction/normalization/tokenizer identity. Atomic records validate payloads, key correspondence and unit vectors. All vectors in a response are validated before that batch is persisted.
+- Verified response index reordering, missing/duplicate indices, zero/wrong-dimension vectors, direct NaN/Inf normalization rejection, altered cache rejection, the 4096-dimensional profile, no send after budget denial, and successful batch reuse after a later uncertain timeout. Returned usage settles before vector validation; unknown timeout billing remains reserved. No real provider request was made.
+- Whole-suite/common gate passed, including Ruff (94 files), locked checks/sync, package build and original CLI smokes. Runtime paid integration remains pending.
