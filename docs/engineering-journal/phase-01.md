@@ -126,3 +126,13 @@ performed for this documentation request.
 - Real read-only loader check: **53 canonical PDFs / 9,504 pages**, two excluded Amcor aliases, one outside-scope Foot Locker metadata conflict. Selected source snapshot saved only in ignored execution scratch.
 - Canonical 53-source fingerprint: `7376d03d8183077b92ed98b8c4e3a584fefd02202b75feba82cdc13b2519fad3`. The original 55-PDF aggregate remains `7d8ca4d2d901038058ac345778ecb5898f20e04e6f5a0c97ffd344db41a776fe`; both JSONL hashes equal the planning baseline.
 - Contracts remain Pydantic/standard-library only. The offline manifest loader accepts document-information fields, not benchmark question/answer fields. No raw source files were staged.
+
+### Task 2 - Source extraction and validated cache
+
+- Task 1 local commit: `4c69d41`; its 15-file staged allowlist passed limited secret-pattern, size, artifact, ignore, and whitespace checks. Lock check, formatting check, synthetic smoke, and focused task-done test passed (19 passed / 1 explicit Windows symlink skip).
+- RED: extraction/cache tests failed on missing `TextBlock` and cache module. Implemented original-order PyMuPDF text/blocks, unchanged raw text, proven block spans, explicit empty/error pages, and atomic validated cache envelopes.
+- Added read-only `load_cached(document, config, cache_root)` so offline audit can validate frozen pages without reading private envelopes or re-extracting based on annotations. Its added test failed on missing function before implementation, then passed.
+- Cache tests cover hits without parser calls; changed source hashes; config/parser revisions; truncated, wrong-document, incomplete, modified-text, and old-schema cache data; interrupted atomic replacement. Synthetic table/text tests cover years, units, negatives, Latin Unicode, original multi-column order, and layout/extraction failures.
+- Focused initial GREEN: 23 tests passed. Final `uv run --locked pytest -m "not integration" --basetemp=.pytest-tmp -q`: **108 passed, 1 skipped in 3.12s**. Ruff formatting/lint passed.
+- `uv run --locked finsight-ingest manifest --metadata source-data/data/financebench_document_information.jsonl --pdf-root source-data/pdfs --output data/manifests/financebench-selected.json`: **53 documents**, expected aliases/conflict, unchanged 53-source fingerprint. This generated provenance artifact contains no benchmark questions or labels.
+- No claim of full-corpus extraction or real table QA yet; those checks follow frozen-ID preparation.
