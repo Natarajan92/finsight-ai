@@ -14,3 +14,5 @@ class Settings(BaseSettings):
     source_pdf_dir: Path = Path("source-data/pdfs")
     artifact_dir: Path = Path("data")
     api_key: SecretStr | None = None
+    nebius_api_key: SecretStr | None = None
+    anthropic_api_key: SecretStr | None = None

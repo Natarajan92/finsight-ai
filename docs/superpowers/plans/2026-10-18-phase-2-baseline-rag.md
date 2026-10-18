@@ -10,7 +10,7 @@
 
 **Spec:** [2026-10-18-phase-2-baseline-rag-design.md](../specs/2026-10-18-phase-2-baseline-rag-design.md), approved in P2-006.
 
-**Status:** Prepared for human plan review. All implementation steps are unchecked. No execution method has been selected in this conversation. No product dependency installation, runtime implementation or paid call has occurred while preparing this plan.
+**Status:** Reviewed and approved for native execution in P2-008. Task checkboxes record verified implementation progress; paid acceptance remains a separate gated step.
 
 ## Global Constraints
 
@@ -105,7 +105,7 @@ Task 1 establishes these shared ports/types; owning tasks define implementation 
 
 `BaselineConfig` serializes schema/scenario version; source fingerprint; size/overlap; tokenizer name/revision; embedding provider/model/revision/dimension/instructions/normalization; generation model/prompt version/effort; execution limits; score metric; budget identity/caps. Default scenario is `fixed_dense_v1`, dimension 4096, cosine distance, prompt `grounded-v1`, effort `low`; use the global limits verbatim. Configuration cannot increase approved budget/output bounds. All material settings participate in a canonical fingerprint.
 
-- [ ] **Step 1 - Add failing configuration/constructor tests.** Include assertions:
+- [x] **Step 1 - Add failing configuration/constructor tests.** Include assertions:
 
 ```python
 assert config.chunk_tokens == 400 and config.overlap_tokens == 60
@@ -117,10 +117,10 @@ assert config.fingerprint() != changed_prompt.fingerprint()
 ```
 
 Also reject nonfinite rates/limits, semantic/rerank baseline configuration, unbounded budgets, credentials inside serialized config, and contracts importing LangChain/provider modules. Fake-key `ChatAnthropic` client construction and a local Chroma instance with default embedding disabled must perform no network request.
-- [ ] **Step 2 - Run RED:** `uv run --locked pytest tests/rag/test_runtime_config.py tests/test_runtime.py --basetemp=.pytest-tmp/p2 -q`. Expect missing new types/imports before dependency changes; record the actual failure.
-- [ ] **Step 3 - Add the exact pins above, regenerate `uv.lock`, then `uv sync --locked --group dev`.** Do not upgrade existing direct pins. Capture actual installation and constructor compatibility. Create the typed configuration/ports, config JSON and credential placeholders; redact both provider keys plus the legacy key.
-- [ ] **Step 4 - Run GREEN:** the RED command plus `uv lock --check`, Ruff and existing contract/isolation tests. Expect keyless constructors and serialization/import boundaries to pass. No model/tokenizer download occurs.
-- [ ] **Step 5 - Run the common pre-commit gate; commit only Task 1 files and updated journal:** `feat: define baseline RAG runtime configuration`.
+- [x] **Step 2 - Run RED:** `uv run --locked pytest tests/rag/test_runtime_config.py tests/test_runtime.py --basetemp=.pytest-tmp/p2 -q`. Expect missing new types/imports before dependency changes; record the actual failure.
+- [x] **Step 3 - Add the exact pins above, regenerate `uv.lock`, then `uv sync --locked --group dev`.** Do not upgrade existing direct pins. Capture actual installation and constructor compatibility. Create the typed configuration/ports, config JSON and credential placeholders; redact both provider keys plus the legacy key.
+- [x] **Step 4 - Run GREEN:** the RED command plus `uv lock --check`, Ruff and existing contract/isolation tests. Expect keyless constructors and serialization/import boundaries to pass. No model/tokenizer download occurs.
+- [x] **Step 5 - Run the common pre-commit gate; commit only Task 1 files and updated journal:** `feat: define baseline RAG runtime configuration`.
 
 ## Task 2: Durable spending ledger and guarded dispatch
 

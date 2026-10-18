@@ -304,3 +304,30 @@ Human plan review and execution-method selection remain pending. Account-specifi
 model availability, current rates, installed framework compatibility, tokenizer
 asset hashes and real RAG behavior are implementation gates, not established facts
 from resolution alone. No provider credits have been consumed in this planning.
+
+## P2-008 - Native implementation authorized
+
+- **Original human prompt:** "Native implementation and start the implementation as per plan"
+- **Review:** implementation plan approved; native execution selected. Work remains
+  on `feat/phase-2-baseline-rag` in the approved existing checkout, starting at
+  `60ebddd552bda459d577c600001b1564c442da91`. No publication/merge permission implied.
+- **Workflow:** installed Superpowers executing-plans, test-driven-development,
+  using-git-worktrees verification and verification-before-completion. Per-plan
+  ignored ledger: `.superpowers/sdd/2026-10-18-phase-2-baseline-rag/progress.md`.
+- **Workspace ruling:** honor the accepted current-checkout/feature-branch plan;
+  no separate linked worktree. Bash bookkeeping is adapted to Python/PowerShell,
+  preserving plan ownership, task briefs, BASE, test evidence and completion lines.
+- **Baseline:** 142 passed, one Windows symlink skip, four integration checks
+  deselected in 9.86s. Runtime/provider work proceeds only within the reviewed caps.
+- **Human reasoning:** native execution chosen; further reasoning not supplied.
+  Asked for local-only credential configuration while offline implementation
+  proceeds. No key values are requested in chat. Task evidence follows as executed.
+
+### Task 1 - Runtime boundaries and dependency compatibility
+
+- RED: `.venv/Scripts/python.exe -B -m pytest tests/rag/test_runtime_config.py --basetemp=.pytest-tmp/p2 -q`: 17 expected failures (missing config, credentials and integration packages).
+- Added immutable bounded configuration, safe error/port/trace contracts, provider SecretStr settings and three-key log redaction. No provider clients are created at import time.
+- Installed the eight approved direct pins; uv resolved 107 cross-platform packages in the complete lock (platform-only packages included). Existing direct pins retained. Keyless Claude construction and local Chroma with embeddings disabled passed under blocked sockets.
+- GREEN: focused configuration/runtime suite 28 passed in 20.89s; whole keyless suite 159 passed, one Windows symlink skip, four integration deselected in 28.41s. First cold import was interrupted for diagnosis; a fresh timed run completed without a compatibility failure.
+- Gates: `uv lock --check`, locked dev sync, Ruff check/format (79 files), existing synthetic smoke/CLI help, `uv build` and `git diff --check` passed. Package operations used the native-account temporary uv cache, avoiding the earlier cache ownership conflict.
+- No model/tokenizer download or paid call. Human confirmed local key configuration; key values were neither requested in chat nor inspected.
