@@ -31,9 +31,13 @@ class _SafeStreamHandler(logging.StreamHandler):
 
 def configure_logging(settings: Settings, *, stream: TextIO | None = None) -> logging.Logger:
     """Own only the finsight logger; do not forward unredacted records to root."""
-    secret = settings.api_key.get_secret_value() if settings.api_key else ""
+    secrets = tuple(
+        value.get_secret_value()
+        for value in (settings.api_key, settings.nebius_api_key, settings.anthropic_api_key)
+        if value and value.get_secret_value()
+    )
     handler = _SafeStreamHandler(stream)
-    handler.setFormatter(_RedactingFormatter((secret,) if secret else ()))
+    handler.setFormatter(_RedactingFormatter(secrets))
     logger = logging.getLogger("finsight")
     for previous in logger.handlers[:]:
         logger.removeHandler(previous)

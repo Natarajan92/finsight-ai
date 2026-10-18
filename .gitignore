@@ -34,6 +34,7 @@ __pycache__/
 
 # Temporary evaluation artifacts
 /results/traces/
+/results/testing-budget-identity.json
 
 # Local tooling
 .ipynb_checkpoints/

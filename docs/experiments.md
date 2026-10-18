@@ -1,8 +1,10 @@
 # Experiment record conventions
 
-No retrieval/generation experiment has run. The Phase 1 split is selected and frozen;
-there is no index, provider, measured accuracy, faithfulness, latency, token usage or model cost yet.
-The synthetic smoke verifies contracts only and reports cost as unknown.
+The Phase 1 split is frozen. Phase 2 implementation is verified; its guarded
+full-corpus index stopped on an uncertain provider timeout. Acceptance is blocked;
+actual status is recorded below and in the
+linked result summary. No aggregate accuracy or faithfulness is established.
+The synthetic smoke reports provider cost as unknown.
 
 Future approved experiments must compare A fixed/no-rerank, B semantic/no-rerank,
 C fixed/rerank, D semantic/rerank. Freeze corpus, embedding model/revision/dimension,
@@ -41,3 +43,24 @@ Provider smoke tests require separate credential/spend approval. Targets in
   holdout once on the same 16 IDs. No holdout generation/retrieval run has occurred.
 
 See [the data audit](data_audit.md) and [Phase 1 journal](engineering-journal/phase-01.md).
+
+## Phase 2 baseline
+
+The approved fixed/dense baseline is implemented through the same typed service
+used by future UI/experiments. Real acceptance uses exactly three deterministic
+frozen-development cases from distinct companies and a separate forecast negative;
+it does not run holdout or implement Phase 4 scoring. Requests contain only
+question text, never gold-derived document filters. Completed campaigns replay
+validated local traces; interrupted started campaigns fail closed against repurchase.
+
+See [ADR 0003](decisions/0003-baseline-rag.md), the
+[Phase 2 journal](engineering-journal/phase-02.md) and
+[baseline acceptance](../results/phase-2-baseline-smoke.md) for actual execution
+and known limitations. Synthetic/model-metadata checks do not establish live answer
+quality. All paid attempts share the $5/$4/$0.75 ledger limits and an untouched $1 reserve.
+
+Current real checkpoint: 1,792/22,070 chunk vectors, 113 Nebius attempts (112
+settled, one unknown), $0.006045 accounted plus $0.000065 retained reservation.
+No Claude inference or development/holdout answer run occurred. The five real
+source/cache/split checks pass; complete-index and campaign gates fail closed.
+No query latency, answer correctness or citation-support result is available yet.
