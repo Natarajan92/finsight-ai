@@ -281,7 +281,7 @@ Assert the configured integration uses `with_structured_output(DraftAnswer, meth
 
 Every quoted reference must match a supplied evidence ID and lie wholly within one supplied exact source span and its unchanged cached page. Resolve metadata on the server. A real quote elsewhere in the filing, another year, another page, or an omitted portion of an overlapping chunk is invalid. Preserve extraction warnings as relevant limitations. Integrity checks do not certify semantic support.
 
-- [ ] **Step 1 - Write failing validation/calculation tests**, including:
+- [x] **Step 1 - Write failing validation/calculation tests**, including:
 
 ```python
 assert answer.status == "answered"
@@ -293,10 +293,10 @@ with pytest.raises(FinsightError, match="citation_validation_failed"):
 ```
 
 Add `test_real_quote_on_wrong_year_span_rejected`, `test_every_claim_requires_reference`, `test_unsupplied_id_never_resolves`, `test_invalid_citation_does_not_leave_success_text`, `test_partial_requires_missing_part_limitations`, and `test_abstention_carries_no_fact_citations_or_calculation`. Arithmetic tests assert exact supplied operand text/value, preserved scale/year, parentheses negatives and grouping commas; reject scientific/code expressions, division by zero, incompatible units/unsupported periods, invented operands and mismatched finite results. `test_explicit_cross_period_subtraction_keeps_each_cited_year` proves an expressly requested year-over-year comparison is supported rather than requiring all operands to share a year.
-- [ ] **Step 2 - Run RED:** `uv run --locked pytest tests/rag/test_citation_validation.py tests/rag/test_calculation.py --basetemp=.pytest-tmp/p2 -q`.
-- [ ] **Step 3 - Implement deterministic mapping and arithmetic.** Parse only explicit financial numeric literals (`1,000`, `-25`, `(25)`, decimal forms); scales must come from supplied evidence and match declared units. Addition/subtraction require identical units; explicitly requested comparisons may use different individually verified periods. Multiplication/division allow one dimensionless operand, or same-unit division to a dimensionless ratio. Reject other dimensional combinations. Use Decimal precision 28, no Python expression execution, no silent rounding or percent/percentage-point conversions. Recompute supported operations and populate the existing public `Calculation` with a server-rendered expression.
-- [ ] **Step 4 - Run GREEN:** same tests plus existing `tests/test_contracts.py`. Preserve actual usage when a draft fails; map validation failures to explicit codes in Task 9.
-- [ ] **Step 5 - Common gate and commit:** `feat: validate claim citations and financial calculations`.
+- [x] **Step 2 - Run RED:** `uv run --locked pytest tests/rag/test_citation_validation.py tests/rag/test_calculation.py --basetemp=.pytest-tmp/p2 -q`.
+- [x] **Step 3 - Implement deterministic mapping and arithmetic.** Parse only explicit financial numeric literals (`1,000`, `-25`, `(25)`, decimal forms); scales must come from supplied evidence and match declared units. Addition/subtraction require identical units; explicitly requested comparisons may use different individually verified periods. Multiplication/division allow one dimensionless operand, or same-unit division to a dimensionless ratio. Reject other dimensional combinations. Use Decimal precision 28, no Python expression execution, no silent rounding or percent/percentage-point conversions. Recompute supported operations and populate the existing public `Calculation` with a server-rendered expression.
+- [x] **Step 4 - Run GREEN:** same tests plus existing `tests/test_contracts.py`. Preserve actual usage when a draft fails; map validation failures to explicit codes in Task 9.
+- [x] **Step 5 - Common gate and commit:** `feat: validate claim citations and financial calculations`.
 
 ## Task 9: Shared LangChain service, traces and keyless CLI smoke
 

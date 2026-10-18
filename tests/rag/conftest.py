@@ -186,3 +186,62 @@ def index_setup(tmp_path, pdf_factory, metadata_factory, char_tokenizer):
     context = CallContext("index-run", 2, 1e20)
     root = tmp_path / "index"
     return module, corpus, repo, config, embeddings, root, context, char_tokenizer
+
+
+@pytest.fixture
+def citation_setup(source, score):
+    from finsight.contracts import Page, UsageMetrics
+    from finsight.contracts.context import EvidencePacket, EvidenceSlice
+    from finsight.contracts.generation import DraftAnswer
+
+    parts = [
+        "2022 USD millions\nRevenue 100\n",
+        "2021 USD millions\nRevenue 125\nLoss (25)\n",
+        "2022 dimensionless factor 2\nZero 0\nThree 3\n",
+    ]
+    text = "".join(parts)
+    page = Page(
+        document_id="synthetic-document",
+        page_index=0,
+        text=text,
+        extraction_status="ok",
+        parser_version="synthetic-v1",
+    )
+    slices = []
+    offset = 0
+    for index, part in enumerate(parts):
+        slices.append(
+            EvidenceSlice(
+                evidence_id="abf"[index] * 64,
+                chunk_id="cde"[index] * 64,
+                document_id=page.document_id,
+                page_index=0,
+                source_spans=[dict(page_index=0, char_start=offset, char_end=offset + len(part))],
+                text=part,
+                source=source,
+                score=score,
+            )
+        )
+        offset += len(part)
+    packet = EvidencePacket(slices=slices)
+
+    class Pages:
+        def get(self, identity, index):
+            assert (identity, index) == (page.document_id, page.page_index)
+            return page
+
+    draft = DraftAnswer(
+        status="answered",
+        claims=[
+            dict(
+                text="Revenue was 100 in 2022.",
+                references=[dict(evidence_id="a" * 64, quote="Revenue 100")],
+            )
+        ],
+    )
+    return (
+        packet,
+        Pages(),
+        draft,
+        UsageMetrics(model_calls=1, input_tokens=100, output_tokens=20, cost_usd="0.001"),
+    )
