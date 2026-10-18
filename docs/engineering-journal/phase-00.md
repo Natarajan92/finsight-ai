@@ -178,3 +178,31 @@ made. Test runtimes above are test-run durations, not answer latency measurement
 - Final human review PENDING. No remote PR, push, merge, deployment or Phase 1 work.
 - Next recommended phase: dataset/provenance, only after separate approval and
   the repository's branch/PR gate. No measured RAG quality or provider usage exists.
+
+## P0-007 - Human review approved and branch publication authorized
+
+- Captured 2026-10-18; clock observed 13:53:11 IST.
+- Actor: human review/workflow request to Codex.
+- Exact human prompt: "Reviewed the changes, good with phase 0, lets push it and
+  create a new branch for phase 1".
+- Human Phase 0 result review: APPROVED for implementation commit
+  `b260de1ba6cfe2335c00ba6f2f75432ed0da86e1`. No additional human diagnosis or
+  rationale was supplied. The prior pending-review entries describe earlier state.
+- Authorized: publish only `chore/phase-0-foundation`, create its reviewable PR,
+  and prepare `feat/phase-1-ingestion`. No Phase 1 implementation, deployment or
+  merge was explicitly authorized by this prompt.
+- Repo/remote verification: feature working tree clean, live remote main still
+  `75461c03528f00f5ae3b62c9f872f0e987122eae`, connected GitHub permissions usable,
+  no existing PR for this branch. No force push or remote settings change.
+- Pre-publication commands: `uv lock --check`, `uv run --locked ruff check .`,
+  `uv run --locked ruff format --check .`,
+  `uv run --locked pytest --basetemp=.pytest_cache/prepush -q`, and
+  `uv run --locked finsight-smoke` all passed: 65 tests in 1.95s, 0 fail/skip;
+  synthetic smoke passed with page 0 and cost unknown.
+- Publication follows the containing documentation commit. GitHub CI status
+  remains unknown until observed. Phase 1 base must follow `project.md`: latest
+  main after approved merge, or an explicitly approved stacked branch.
+- Pre-push index inspection: all 49 versioned files checked; zero known credential
+  pattern/forbidden artifact/over-1MB findings; raw-data, private dotenv, cache and
+  build ignore checks passed. This is a limited pattern scan, not a universal
+  secret-detection guarantee. No financial source file changed.
