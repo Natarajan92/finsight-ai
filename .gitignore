@@ -1,0 +1,40 @@
+# Environment and secrets
+.env
+.env.*
+!.env.example
+.venv/
+__pycache__/
+.pytest_cache/
+/.pytest-tmp/
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+/build/
+/dist/
+.coverage
+/htmlcov/
+.superpowers/
+
+# Original downloaded source documents
+/source-data/
+/finsight_docs_templates/
+/source-data/data/
+/source-data/pdfs/
+/source-data/results/
+/source-data/vectorstores/
+
+# Generated data
+/data/processed/
+/data/cache/
+/data/raw/
+/data/indexes/
+/data/evaluation/
+/storage/
+/storage/vectorstores/
+
+# Temporary evaluation artifacts
+/results/traces/
+
+# Local tooling
+.ipynb_checkpoints/
+*.log
