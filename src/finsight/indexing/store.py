@@ -1,7 +1,10 @@
 """Pinned local Chroma; all queries supply vectors; no hosted/default embeddings."""
 
 import math
+import os
+import re
 import sys
+import tempfile
 from array import array
 from contextlib import closing, contextmanager
 from hashlib import sha256
@@ -14,12 +17,64 @@ from finsight.contracts.documents import Chunk, DocumentManifest
 from finsight.runtime.errors import FinsightError
 
 
-def vector_hash(vector) -> str:
-    # Chroma stores float32. Canonicalize before hashing on both insertion and reopen.
+def _vector_bytes(vector) -> bytes:
     values = array("f", map(float, vector))
     if sys.byteorder != "little":
         values.byteswap()
-    return sha256(values.tobytes()).hexdigest()
+    return values.tobytes()
+
+
+def vector_hash(vector) -> str:
+    return sha256(_vector_bytes(vector)).hexdigest()
+
+
+class VectorReferences:
+    """Exact input bytes; cosine HNSW may renormalize its float32 storage."""
+
+    def __init__(self, root: Path):
+        self.root = Path(root)
+
+    def _path(self, identity: str) -> Path:
+        if not re.fullmatch(r"[a-f0-9]{64}", identity):
+            raise FinsightError("index_integrity")
+        return self.root / (identity + ".f32")
+
+    def put(self, identity: str, vector) -> str:
+        payload = _vector_bytes(vector)
+        path = self._path(identity)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        if path.exists():
+            if path.read_bytes() != payload:
+                raise FinsightError("index_integrity")
+            return sha256(payload).hexdigest()
+        descriptor, temporary = tempfile.mkstemp(dir=path.parent, suffix=".tmp")
+        try:
+            with os.fdopen(descriptor, "wb") as handle:
+                handle.write(payload)
+                handle.flush()
+                os.fsync(handle.fileno())
+            os.replace(temporary, path)
+        finally:
+            Path(temporary).unlink(missing_ok=True)
+        return sha256(payload).hexdigest()
+
+    def get(self, identity: str, expected_hash: str, dimension: int):
+        try:
+            with self._path(identity).open("rb") as handle:
+                payload = handle.read(dimension * 4 + 1)
+            if len(payload) != dimension * 4 or sha256(payload).hexdigest() != expected_hash:
+                raise ValueError("Canonical vector changed")
+            values = array("f")
+            values.frombytes(payload)
+            if sys.byteorder != "little":
+                values.byteswap()
+            if any(not math.isfinite(v) for v in values) or not math.isclose(
+                math.hypot(*values), 1, abs_tol=1e-6
+            ):
+                raise ValueError("Invalid canonical vector")
+            return values
+        except (ValueError, OSError):
+            raise FinsightError("index_integrity") from None
 
 
 def chunk_metadata(chunk: Chunk, document: DocumentManifest) -> dict[str, str | int]:
@@ -35,6 +90,7 @@ def chunk_metadata(chunk: Chunk, document: DocumentManifest) -> dict[str, str | 
 
 class LocalVectorStore:
     def __init__(self, root: Path, *, create: bool):
+        self.references = VectorReferences(root.parent / "vector-references")
         if not create and not (root / "chroma.sqlite3").is_file():
             raise FinsightError("index_incomplete")
         self.client = chromadb.PersistentClient(
@@ -77,6 +133,16 @@ class LocalVectorStore:
             ):
                 yield key, (text, metadata, vector)
 
+    def validate_vector(self, identity, vector, expected_hash: str, dimension: int) -> None:
+        expected = self.references.get(identity, expected_hash, dimension)
+        if (
+            len(vector) != dimension
+            or any(not math.isfinite(float(v)) for v in vector)
+            or not math.isclose(math.hypot(*vector), 1, abs_tol=1e-4)
+            or math.dist(vector, expected) > 1e-6
+        ):
+            raise FinsightError("index_integrity")
+
     def validate(self, catalog, corpus, dimension: int, hashes: dict[str, str], *, complete: bool):
         rows = set()
         chunks = catalog.chunks_by_id
@@ -92,10 +158,11 @@ class LocalVectorStore:
                 or len(vector) != dimension
                 or any(not math.isfinite(float(v)) for v in vector)
                 or not math.isclose(math.hypot(*vector), 1, abs_tol=1e-4)
-                or (identity in hashes and vector_hash(vector) != hashes[identity])
                 or (complete and identity not in hashes)
             ):
                 raise FinsightError("index_integrity")
+            if identity in hashes:
+                self.validate_vector(identity, vector, hashes[identity], dimension)
         if complete and rows != set(chunks):
             raise FinsightError("index_integrity")
         return rows

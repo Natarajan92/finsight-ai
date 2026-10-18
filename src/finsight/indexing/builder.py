@@ -19,7 +19,6 @@ from .store import (
     LocalVectorStore,
     chunk_metadata,
     index_build_lock,
-    vector_hash,
 )
 
 
@@ -137,7 +136,10 @@ def build_index(
                     raise FinsightError("embedding_shape")
                 vectors = [normalize_vector(v, config.embedding_dimension) for v in vectors]
                 hashes.update(
-                    {c.chunk_id: vector_hash(v) for c, v in zip(batch, vectors, strict=True)}
+                    {
+                        c.chunk_id: store.references.put(c.chunk_id, v)
+                        for c, v in zip(batch, vectors, strict=True)
+                    }
                 )
                 # Persist vector identity first; a crash can require re-upserting cached vectors.
                 write_json_atomic(

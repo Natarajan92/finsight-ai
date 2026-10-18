@@ -147,3 +147,113 @@
 - Verification: the unchanged pins resolved for Python 3.12 Windows and Linux;
   final full-pin resolution passed independently on both with 104 packages each.
   This establishes the cache-path workaround, not installed/runtime compatibility.
+
+## BUG-009 - SQLite transaction context did not close the bootstrap connection
+
+- Offline Task 2 RED/GREEN: deleting the test ledger failed with Windows error 32.
+- Cause: `with sqlite3.connect(...)` commits/rolls back but does not close its handle.
+- Fix: explicit connection closing, preserving the identity marker and fail-closed
+  missing/corrupt-ledger behavior. Budget/restart/concurrency tests passed.
+
+## BUG-010 - Native schema conversion removed fixed-tuple operand types
+
+- Offline Task 7 request-capture regression failed with missing native `items`.
+- The pinned Anthropic schema transformer removed unsupported `prefixItems` for
+  a fixed two-element tuple, leaving an untyped array in the generated request.
+- Fix: homogeneous typed operands with local min/max length two. The native-schema
+  regression and strict arithmetic tests pass; no paid repair/probe was used.
+
+## BUG-011 - Self-consistent local index hashes did not prove complete membership
+
+- Task 5 RED removed a chunk, its vector and corresponding manifest entry, then
+  recomputed local hashes; reopening incorrectly accepted the shortened index.
+- Fix: regenerate expected windows from unchanged sources and the pinned tokenizer
+  on reopen. Page/catalog/vector metadata still validate independently. Vector
+  scans are paginated to 128 rows, and selected vectors are checked again before
+  evidence is returned. Both membership and post-open alteration regressions pass.
+
+## BUG-012 - Chroma clients outlived index build and failed reopen
+
+- Installed synthetic RAG RED returned an error because Windows could not remove
+  an owned temporary index with a live Chroma file handle.
+- Fix: explicit ownership/close on build completion, completed-build reuse, failed
+  reopening and service cleanup. Synthetic CLI and separate failed-reopen tests
+  pass without changing global Chroma state or filesystem permissions.
+
+## BUG-013 - Reduced configured caps were not bound to atomic reservations
+
+- Task 9 RED showed a $0.001 configured phase cap could not be supplied to the
+  dispatcher, which only used the approved ledger's $0.75 maximum.
+- Fix: pass the configured lower caps into each `BEGIN IMMEDIATE` reservation;
+  bound them by the original caps and round available micro-USD downward.
+- The reduced-cap denial test and full budget suite pass. No provider call occurred
+  in any of these bug reproductions.
+
+## BUG-014 - A busy ledger was mislabeled as corrupt
+
+- A controlled settled-batch checkpoint held a temporary dispatch lock without
+  changing ledger rows. The old job failed closed with `budget_integrity`.
+- RED reproduced SQLite BUSY with a short test timeout; the code now returns
+  `budget_busy` for BUSY/LOCKED while retaining strict integrity errors for real
+  corruption. The checkpoint ledger stayed healthy: 44 settled attempts, 704 cached
+  vectors, $0.002368 accounted, zero unknown/in-flight reservations.
+
+## BUG-015 - Cosine persistence changed exact vector bytes
+
+- The compatible real-index resume failed closed before new dispatch: 188 of 704
+  Chroma vectors differed from the original float32 hashes, despite valid source,
+  catalog, text, metadata, dimensions and unit norms. All 704 validated embedding
+  cache records matched the original hashes; maximum stored/input L2 difference
+  was `9.498614306192159e-08`.
+- Cause: cosine HNSW renormalization changes floating-point bytes. The previous
+  constant three-dimensional buffer-flush test did not expose this behavior.
+- RED: a seeded random 4096-dimensional, >100-vector lifecycle failed final index
+  validation; a second test showed canonical-reference alteration was unchecked.
+- Fix: persist exact, hash-verified little-endian float32 input references and
+  require stored/selected Chroma vectors to remain within `1e-6` L2 distance.
+  Missing/altered references, metadata/text changes and larger vector changes
+  still fail closed. Focused index/retrieval GREEN: 24 passed in 19.93 seconds.
+- Existing paid vectors can be copied from validated cache only after confirming
+  their original hashes. No ledger reset, provider repair call or original-source
+  change is part of the correction. Full acceptance remains pending.
+
+## BUG-016 - Per-read timeouts did not bound elapsed provider waits
+
+- Independent review of `eecba8f` found blocking HTTPX/SDK calls could keep making
+  I/O progress beyond the promised elapsed limit. The embedding dispatcher also
+  ignored configured limits below 20 seconds.
+- RED: elapsed-dispatch/free-count tests returned late instead of bounded failure.
+- Fix: copied-context daemon calls with bounded caller waits, transport timeouts
+  and at most 16 unfinished workers. Late results cannot settle accounting or
+  populate caches/traces; unknown billing remains fully reserved without retry.
+- Actual HTTPX progressing-stream and native LangChain SDK tests verify one
+  timed-out attempt, no late cache/usage acceptance and retained reservations.
+  Remote cancellation cannot be proven by a client timeout.
+
+## BUG-017 - Replay trusted internally inconsistent saved evidence
+
+- Independent review reproduced changed prompts/request hashes and a real quote
+  paired with fabricated chunk/filing metadata accepted on completed replay.
+- RED: eight coherent request/prompt/chunk/company/filing/period/span/filter
+  alterations were accepted after consistent receipt updates; five existing tests
+  passed. An initial expanded fixture omitted required usage and was corrected
+  before recording the functional RED.
+- Fix: join retrieved chunks and retained evidence to the reopened catalog and
+  source manifest, enforce filters/identities/span containment, rebuild prompts,
+  recompute request hashes and bind receipts to complete canonical trace hashes.
+- GREEN: all 13 selection/campaign tests pass, including zero-dispatch valid
+  replay and interrupted-campaign denial.
+
+## BUG-018 - Another ledger path could recreate the shared allowance
+
+- Independent review created two zero-spend ledgers with the same fixed identity.
+  Adjacent markers protected each path but did not bind the application identity
+  to one durable authority outside its disposable cache directory.
+- RED: CLI initialization at another path and initialization with surviving trace
+  activity incorrectly succeeded.
+- Fix: require an independent durable anchor binding identity/caps to the ledger
+  path; validate it on every transaction. Refuse fresh CLI bootstrap when existing
+  embedding/index/trace files require reconciliation. Missing/corrupt authorities
+  never trigger automatic initialization. Direct callers must supply their anchor.
+- Existing live activity is reconciled without resetting/reinitializing the ledger.
+  New-path, cache-loss, reopen, concurrency and duplicate-request tests pass.

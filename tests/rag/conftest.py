@@ -85,7 +85,9 @@ def embedding_setup(tmp_path, char_tokenizer, synthetic_rates):
     module = importlib.import_module("finsight.indexing.nebius")
     config = BaselineConfig(embedding_dimension=3)
     cache = cache_module.EmbeddingCache(tmp_path / "embeddings", config)
-    ledger = BudgetLedger.initialize(tmp_path / "budget.sqlite3", config.budget_id)
+    ledger = BudgetLedger.initialize(
+        tmp_path / "budget.sqlite3", config.budget_id, anchor_path=tmp_path / "authority.json"
+    )
     dispatcher = GuardedDispatcher(ledger, synthetic_rates)
     calls = []
     responses = []

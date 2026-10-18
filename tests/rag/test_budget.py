@@ -18,7 +18,9 @@ def ledger_type():
 
 @pytest.fixture
 def ledger(tmp_path):
-    return ledger_type().initialize(tmp_path / "testing.sqlite3", BUDGET_ID)
+    return ledger_type().initialize(
+        tmp_path / "testing.sqlite3", BUDGET_ID, anchor_path=tmp_path / "authority.json"
+    )
 
 
 def reserve(ledger, identity="one", amount="0.74", phase=2):
@@ -29,7 +31,7 @@ def test_phase_and_global_limits_persist(ledger):
     reserve(ledger)
     with pytest.raises(FinsightError, match="budget_exceeded"):
         reserve(ledger, "two", "0.02")
-    reopened = ledger_type().open(ledger.path, BUDGET_ID)
+    reopened = ledger_type().open(ledger.path, BUDGET_ID, anchor_path=ledger.anchor)
     assert reopened.snapshot().reserved_usd == Decimal("0.74")
     reserve(reopened, "phase3", "3.26", 3)
     with pytest.raises(FinsightError, match="budget_exceeded"):
@@ -42,14 +44,14 @@ def test_timeout_retains_full_reservation_after_restart(ledger):
     r = reserve(ledger)
     ledger.mark_dispatched(r.reservation_id)
     ledger.settle(r.reservation_id, None)
-    reopened = ledger_type().open(ledger.path, BUDGET_ID)
+    reopened = ledger_type().open(ledger.path, BUDGET_ID, anchor_path=ledger.anchor)
     assert reopened.snapshot().reserved_usd == Decimal("0.74")
     assert reopened.snapshot().accounted_usd == 0
 
 
 def test_two_connections_cannot_overreserve(ledger):
     def attempt(identity):
-        other = ledger_type().open(ledger.path, BUDGET_ID)
+        other = ledger_type().open(ledger.path, BUDGET_ID, anchor_path=ledger.anchor)
         try:
             reserve(other, identity, "0.5")
             return True
@@ -74,15 +76,15 @@ def test_duplicate_request_cannot_dispatch_twice(ledger):
 def test_missing_or_corrupt_ledger_blocks_send(ledger):
     path = ledger.path
     with pytest.raises(FinsightError, match="budget_exists"):
-        ledger_type().initialize(path, BUDGET_ID)
+        ledger_type().initialize(path, BUDGET_ID, anchor_path=ledger.anchor)
     path.unlink()
     with pytest.raises(FinsightError, match="budget_unavailable"):
-        ledger_type().open(path, BUDGET_ID)
+        ledger_type().open(path, BUDGET_ID, anchor_path=ledger.anchor)
     with pytest.raises(FinsightError, match="budget_exists"):
-        ledger_type().initialize(path, BUDGET_ID)
+        ledger_type().initialize(path, BUDGET_ID, anchor_path=ledger.anchor)
     path.write_bytes(b"corrupt database")
     with pytest.raises(FinsightError, match="budget_integrity"):
-        ledger_type().open(path, BUDGET_ID)
+        ledger_type().open(path, BUDGET_ID, anchor_path=ledger.anchor)
 
 
 def test_actual_cost_over_reservation_is_recorded_not_clamped(ledger):
@@ -102,7 +104,7 @@ def test_round_up_and_invalid_state_or_identity_rejected(ledger):
     with pytest.raises(FinsightError, match="budget_state"):
         ledger.settle(r.reservation_id, Decimal("0"))
     with pytest.raises(FinsightError, match="budget_identity"):
-        ledger_type().open(ledger.path, "different")
+        ledger_type().open(ledger.path, "different", anchor_path=ledger.anchor)
     with pytest.raises((ValueError, FinsightError)):
         reserve(ledger, "bad", "NaN")
 
@@ -126,3 +128,17 @@ def test_busy_storage_is_distinct_from_corrupt_storage(ledger, monkeypatch):
         holder.rollback()
         holder.close()
     assert ledger.snapshot().reserved_usd == 0
+
+
+def test_independent_anchor_blocks_new_path_and_cache_loss(ledger, tmp_path):
+    reserve(ledger, amount="0.1")
+    with pytest.raises(FinsightError, match="budget_exists"):
+        ledger_type().initialize(
+            tmp_path / "another-cache/testing.sqlite3", BUDGET_ID, anchor_path=ledger.anchor
+        )
+    ledger.path.unlink()
+    ledger.marker.unlink()
+    with pytest.raises(FinsightError, match="budget_exists"):
+        ledger_type().initialize(ledger.path, BUDGET_ID, anchor_path=ledger.anchor)
+    with pytest.raises(FinsightError, match="budget_unavailable"):
+        ledger_type().open(ledger.path, BUDGET_ID, anchor_path=ledger.anchor)

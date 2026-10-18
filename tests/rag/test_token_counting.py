@@ -79,3 +79,35 @@ def test_question_limit_and_deadline():
         module.validate_question(
             "small", Counter(), CallContext("run", 2, 0, clock=lambda: 1), BaselineConfig()
         )
+
+
+def test_counting_is_bounded_by_elapsed_application_deadline():
+    from threading import Event
+    from time import monotonic
+
+    release, finished = Event(), Event()
+
+    class Slow:
+        def with_options(self, **options):
+            self.messages = self
+            return self
+
+        def count_tokens(self, **body):
+            try:
+                release.wait(2)
+                return SimpleNamespace(input_tokens=12)
+            finally:
+                finished.set()
+
+    counter = counting().ClaudeTokenCounter(Slow(), "claude-sonnet-5")
+    started = monotonic()
+    try:
+        with pytest.raises(FinsightError):
+            counter.count_text("question", CallContext("run", 2, monotonic() + 0.05))
+        assert monotonic() - started < 0.5
+        assert len(counter.attempts) == 1
+    finally:
+        release.set()
+        assert finished.wait(1)
+    assert counter.records == []
+    assert counter._counts == {}

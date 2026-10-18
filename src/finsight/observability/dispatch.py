@@ -7,6 +7,7 @@ from typing import TypeVar
 from finsight.contracts.budget import CallEstimate, RateBook
 from finsight.contracts.runtime import BaselineConfig, ProviderUsage
 from finsight.contracts.tracing import ProviderAttempt
+from finsight.runtime.deadlines import bounded_call
 from finsight.runtime.errors import FinsightError
 from finsight.runtime.ports import CallContext
 
@@ -30,9 +31,8 @@ class GuardedDispatcher:
         with self._lock:
             return tuple(self._attempts)
 
-    @staticmethod
-    def timeout(context: CallContext) -> float:
-        return min(20.0, context.remaining())
+    def timeout(self, context: CallContext) -> float:
+        return min(self.config.attempt_timeout_s, context.remaining())
 
     def execute(
         self,
@@ -72,7 +72,7 @@ class GuardedDispatcher:
             error = None
             retry = False
             try:
-                raw = send()  # Adapter passes timeout(context) to its transport here.
+                raw = bounded_call(send, self.timeout(context))
                 usage = usage_of(raw)
                 if usage is not None:
                     if (usage.provider, usage.model) != (estimate.provider, estimate.model):

@@ -68,23 +68,67 @@ def campaign_setup(frozen_inputs, tmp_path, monkeypatch):
     from types import SimpleNamespace
 
     import finsight.evaluation.smoke as module
+    from finsight.citations.validation import validate_draft
     from finsight.config import Settings
-    from finsight.contracts import Answer, BaselineConfig
+    from finsight.context.packing import pack_evidence
+    from finsight.contracts import (
+        Answer,
+        BaselineConfig,
+        RetrievalCandidate,
+        SourceMetadata,
+        UsageMetrics,
+    )
+    from finsight.contracts.generation import DraftAnswer
     from finsight.contracts.tracing import RunTrace
+    from finsight.generation.prompts import build_prompt
+    from finsight.indexing.catalog import create_catalog
+    from finsight.ingestion.cache import extract_cached
+    from finsight.ingestion.pages import CachedPageRepository
     from finsight.observability.tracing import JsonlTraceRecorder
+    from finsight.runtime.ports import CallContext
 
     questions, corpus, split_dir, *_ = frozen_inputs
-    config = BaselineConfig(source_fingerprint=corpus.source_fingerprint)
+    config = BaselineConfig(
+        source_fingerprint=corpus.source_fingerprint, chunk_tokens=40, overlap_tokens=5
+    )
     settings = Settings(
         _env_file=None, trace_root=tmp_path / "traces", index_root=tmp_path / "indexes"
     )
     manifest = SimpleNamespace(fingerprint=lambda: "i" * 64)
-    monkeypatch.setattr(module, "local_assets", lambda *args: (corpus, None, None))
+
+    class Tokenizer:
+        def count(self, text):
+            return len(text)
+
+        def offsets(self, text):
+            return tuple((i, i + 1) for i in range(len(text)))
+
+    pages = CachedPageRepository(corpus, questions.parent / "pdfs", tmp_path / "pages")
+    for document in corpus.documents:
+        extract_cached(pages.pdf_root, document, pages.extraction, pages.cache_root)
+    tokenizer = Tokenizer()
+    catalog = create_catalog(corpus, pages, config, tokenizer)
+    chunk = next(c for c in catalog.chunks if "Revenue 1,000" in c.content)
+    document = next(d for d in corpus.documents if d.document_id == chunk.document_id)
+    candidate = RetrievalCandidate(
+        chunk=chunk,
+        source=SourceMetadata(**document.model_dump(include=set(SourceMetadata.model_fields))),
+        rank=1,
+        score=dict(kind="cosine_distance", direction="lower_is_better", value=0.1),
+    )
+
+    class Counter:
+        def count_text(self, text, context):
+            return 100
+
+    monkeypatch.setattr(module, "local_assets", lambda *args: (corpus, pages, tokenizer))
     monkeypatch.setattr(
         module,
         "open_index",
         lambda *args, **kwargs: SimpleNamespace(
-            manifest=manifest, store=SimpleNamespace(client=SimpleNamespace(close=lambda: None))
+            manifest=manifest,
+            catalog=catalog,
+            store=SimpleNamespace(client=SimpleNamespace(close=lambda: None)),
         ),
     )
     monkeypatch.setattr(module, "preflight", lambda *args: {"status": "ready"})
@@ -110,9 +154,35 @@ def campaign_setup(frozen_inputs, tmp_path, monkeypatch):
             if self.calls == self.fail_at:
                 raise RuntimeError("synthetic process interruption")
             self.last_trace_id = "trace" + str(self.calls)
-            answer = Answer(
-                status="insufficient_evidence", limitations=("missing synthetic facts",)
-            )
+            packet = prompt = draft = None
+            retrieved = ()
+            if "Predict" in request.question:
+                answer = Answer(status="insufficient_evidence", limitations=("synthetic forecast",))
+            else:
+                retrieved = (candidate,)
+                packet = pack_evidence(
+                    retrieved,
+                    pages,
+                    request,
+                    Counter(),
+                    CallContext("synthetic", 2, 100, lambda: 0),
+                    config,
+                )
+                prompt = build_prompt(request, packet)
+                draft = DraftAnswer(
+                    status="answered",
+                    claims=[
+                        dict(
+                            text="Revenue was 1,000.",
+                            references=[
+                                dict(
+                                    evidence_id=packet.slices[0].evidence_id, quote="Revenue 1,000"
+                                )
+                            ],
+                        )
+                    ],
+                )
+                answer = validate_draft(draft, packet, pages, UsageMetrics(), request=request)
             from finsight.contracts.base import fingerprint
 
             trace = RunTrace(
@@ -123,6 +193,13 @@ def campaign_setup(frozen_inputs, tmp_path, monkeypatch):
                 request=request,
                 request_fingerprint=fingerprint(request.model_dump(mode="json")),
                 index_fingerprint=manifest.fingerprint(),
+                filters=request.model_dump(mode="json", exclude={"question"}),
+                rate_fingerprint="r" * 64,
+                retrieved=retrieved,
+                packet=packet,
+                prompt=prompt,
+                prompt_fingerprint=prompt.fingerprint if prompt else None,
+                draft=draft,
                 answer=answer,
             )
             sink.record(trace)
@@ -158,3 +235,107 @@ def test_interrupted_campaign_never_automatically_buys_again(campaign_setup):
     with pytest.raises(FinsightError, match="campaign_interrupted"):
         module.run_development_campaign(settings, config, questions, directory, allow_paid=True)
     assert service.calls == 2
+
+
+@pytest.mark.parametrize(
+    "changed",
+    [
+        "request_hash",
+        "prompt",
+        "chunk_id",
+        "doc_name",
+        "company",
+        "fiscal_period",
+        "span",
+        "filters",
+    ],
+)
+def test_campaign_replay_rejects_coherently_changed_trace(campaign_setup, changed):
+    import json
+
+    from finsight.citations.validation import validate_draft
+    from finsight.contracts.base import fingerprint
+    from finsight.contracts.documents import SourceSpan
+    from finsight.generation.prompts import build_prompt
+    from finsight.observability.tracing import JsonlTraceRecorder
+    from finsight.runtime.errors import FinsightError
+
+    module, settings, config, questions, directory, service = campaign_setup
+    result = module.run_development_campaign(
+        settings, config, questions, directory, allow_paid=True
+    )
+    trace = JsonlTraceRecorder(settings.trace_root).load(result["runs"][0]["trace_id"])
+    if changed == "request_hash":
+        trace = trace.model_copy(update={"request_fingerprint": "0" * 64})
+    elif changed == "prompt":
+        trace = trace.model_copy(
+            update={"prompt": trace.prompt.model_copy(update={"user": "changed prompt"})}
+        )
+    elif changed == "filters":
+        trace = trace.model_copy(update={"filters": {"company": "unrequested scope"}})
+    else:
+        evidence = trace.packet.slices[0]
+        if changed == "chunk_id":
+            evidence = evidence.model_copy(update={"chunk_id": "not-in-any-catalog"})
+        elif changed == "span":
+            _, pages, _ = module.local_assets(settings, config)
+            page = pages.get(evidence.document_id, evidence.page_index)
+            evidence = evidence.model_copy(
+                update={
+                    "source_spans": (
+                        SourceSpan(
+                            page_index=page.page_index, char_start=0, char_end=len(page.text)
+                        ),
+                    ),
+                    "text": page.text,
+                }
+            )
+        else:
+            evidence = evidence.model_copy(
+                update={
+                    "source": evidence.source.model_copy(update={changed: "FORGED_2099_REPORT"})
+                }
+            )
+        evidence = evidence.model_copy(
+            update={
+                "evidence_id": fingerprint(
+                    {
+                        "chunk_id": evidence.chunk_id,
+                        "spans": [s.model_dump() for s in evidence.source_spans],
+                    }
+                )
+            }
+        )
+        packet = trace.packet.model_copy(update={"slices": (evidence,)})
+        reference = (
+            trace.draft.claims[0]
+            .references[0]
+            .model_copy(update={"evidence_id": evidence.evidence_id})
+        )
+        claim = trace.draft.claims[0].model_copy(update={"references": (reference,)})
+        draft = trace.draft.model_copy(update={"claims": (claim,)})
+        _, pages, _ = module.local_assets(settings, config)
+        answer = validate_draft(draft, packet, pages, trace.answer.usage, request=trace.request)
+        prompt = build_prompt(trace.request, packet)
+        trace = trace.model_copy(
+            update={
+                "packet": packet,
+                "prompt": prompt,
+                "prompt_fingerprint": prompt.fingerprint,
+                "draft": draft,
+                "answer": answer,
+            }
+        )
+    (settings.trace_root / (trace.run_id + ".jsonl")).write_text(
+        trace.model_dump_json(), encoding="utf-8"
+    )
+    result["runs"][0] = module._trace_summary(
+        trace, result["runs"][0]["question_id"], result["runs"][0]["latency_ms"]
+    )
+    receipt_path = settings.trace_root / ("campaign-" + result["campaign_id"] + ".json")
+    receipt = json.loads(receipt_path.read_text())
+    receipt["runs"] = result["runs"]
+    write_json_atomic(receipt_path, receipt)
+    with pytest.raises(FinsightError, match="campaign_integrity"):
+        module.run_development_campaign(settings, config, questions, directory, allow_paid=False)
+    assert service.calls == 4

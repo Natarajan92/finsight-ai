@@ -81,7 +81,16 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "budget-init":
             from finsight.observability.budget import BudgetLedger
 
-            ledger = BudgetLedger.initialize(settings.ledger_path, BaselineConfig().budget_id)
+            ledger = BudgetLedger.initialize(
+                settings.ledger_path,
+                BaselineConfig().budget_id,
+                anchor_path=settings.budget_anchor_path,
+                activity_roots=(
+                    settings.index_root,
+                    settings.embedding_cache_root,
+                    settings.trace_root,
+                ),
+            )
             result = ledger.snapshot().model_dump(mode="json")
         else:
             config = load_baseline_config(args.config)

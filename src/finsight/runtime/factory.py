@@ -60,7 +60,9 @@ def spending_setup(settings: Settings, config: BaselineConfig):
         raise
     except (ValueError, LookupError, OSError):
         raise FinsightError("rate_unavailable") from None
-    ledger = BudgetLedger.open(settings.ledger_path, config.budget_id)
+    ledger = BudgetLedger.open(
+        settings.ledger_path, config.budget_id, anchor_path=settings.budget_anchor_path
+    )
     return rates, ledger
 
 
@@ -156,7 +158,9 @@ def create_application(
             tokenizer=tokenizer,
         )
         chat = create_chat(config, settings.anthropic_api_key)
-        counter = ClaudeTokenCounter(chat._client, config.generation_model)
+        counter = ClaudeTokenCounter(
+            chat._client, config.generation_model, attempt_timeout_s=config.attempt_timeout_s
+        )
         generator = ClaudeGenerator(config, dispatcher, counter, chat=chat)
         service = BaselineApplicationService(
             config, retriever, counter, generator, pages, JsonlTraceRecorder(settings.trace_root)

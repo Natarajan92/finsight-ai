@@ -33,12 +33,32 @@ def test_installed_synthetic_smoke_runs_from_empty_cwd(tmp_path):
     assert report["provider_network_calls"] == 0
 
 
-def test_budget_init_never_overwrites_existing_ledger(tmp_path, capsys):
+def test_budget_init_never_overwrites_existing_ledger(tmp_path, capsys, monkeypatch):
+    monkeypatch.chdir(tmp_path)
     path = tmp_path / "budget.sqlite3"
     assert cli().main(["budget-init", "--ledger", str(path)]) == 0
     capsys.readouterr()
     assert cli().main(["budget-init", "--ledger", str(path)]) == 1
     assert json.loads(capsys.readouterr().out)["error"]["code"] == "budget_exists"
+
+
+def test_budget_init_cannot_move_the_same_allowance_to_another_path(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    assert cli().main(["budget-init", "--ledger", "cache-a/testing.sqlite3"]) == 0
+    capsys.readouterr()
+    assert cli().main(["budget-init", "--ledger", "cache-b/testing.sqlite3"]) == 1
+    assert json.loads(capsys.readouterr().out)["error"]["code"] == "budget_exists"
+    assert not Path("cache-b/testing.sqlite3").exists()
+
+
+def test_budget_init_refuses_cache_loss_with_surviving_activity(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    trace = Path("results/traces/earlier-index.json")
+    trace.parent.mkdir(parents=True)
+    trace.write_text('{"budget_id":"finsight-testing-2026-10-18"}')
+    assert cli().main(["budget-init", "--ledger", "fresh/testing.sqlite3"]) == 1
+    assert json.loads(capsys.readouterr().out)["error"]["code"] == "budget_reconciliation_required"
+    assert not Path("fresh/testing.sqlite3").exists()
 
 
 def test_ask_without_paid_opt_in_fails_before_provider_setup(tmp_path, capsys):
@@ -72,11 +92,12 @@ def test_preflight_is_keyless_and_reports_a_budget_conflict(
     rates_path = tmp_path / "rates.json"
     rates_path.write_text(synthetic_rates.model_dump_json(), encoding="utf-8")
     ledger_path = tmp_path / "budget.sqlite3"
-    BudgetLedger.initialize(ledger_path, config.budget_id)
+    BudgetLedger.initialize(ledger_path, config.budget_id, anchor_path=tmp_path / "authority.json")
     settings = Settings(
         _env_file=None,
         rates_path=rates_path,
         ledger_path=ledger_path,
+        budget_anchor_path=tmp_path / "authority.json",
         embedding_cache_root=tmp_path / "embeddings",
     )
     monkeypatch.setattr(factory, "local_assets", lambda *args: (corpus, pages, tokenizer))

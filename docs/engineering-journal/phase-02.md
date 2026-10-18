@@ -406,3 +406,55 @@ from resolution alone. No provider credits have been consumed in this planning.
 - Controlled checkpoint held a temporary dispatch gate only between settled batches; no ledger rows changed. All 44 paid attempts settled, 704 vectors cached, $0.002368 accounted, reserved/unknown zero; SQLite integrity is OK. The old job reported a busy lock as integrity failure; a RED/GREEN regression now distinguishes `budget_busy` from corruption. The ledger was never reset; compatible resumption reuses completed rows/vectors.
 - Expanded software identities in run/index metadata; RED caught a missing trace version field. Corrected its import wiring, then verified typed trace roundtrip. Supplemental non-axis-vector/HNSW-buffer integrity and config-fingerprint roundtrip tests pass. Most recent whole keyless gate: 293 passed, one Windows symlink skip, seven integration deselected in 64.28s; Ruff and synthetic RAG smoke passed. Locked sync/check and package build passed.
 - This is a product-code checkpoint so the long provider run has reviewable committed inputs. Acceptance result inspection, independent final review and the final documentation commit remain pending. No push/PR/merge or Phase 2 completion is claimed.
+
+### Task 10 - Cosine persistence regression and independent review
+
+- The resumed full build stopped before additional paid dispatch with `index_integrity`.
+  Local component checks isolated 188/704 exact vector-hash mismatches; source/catalog,
+  membership, text, metadata, dimensions and norms matched. All 704 cache vectors matched
+  the original vector hashes; maximum persisted/input L2 drift was `9.498614306192159e-08`.
+- A genuine 4096-dimensional seeded-vector lifecycle reproduced the failure at final
+  validation. Exact Chroma output bytes are unsuitable as input-vector identity because
+  cosine storage renormalizes float32 values. Added hash-verified canonical binary input
+  references plus a `1e-6` L2 bound on stored/selected vectors. Altered-reference regression
+  also failed first; focused index/retrieval GREEN: 24 passed in 19.93 seconds.
+- Consequence: approximately 345 MiB of additional local reference artifacts for the
+  complete index. Existing references will be backfilled only from validated cache with
+  matching original hashes, preserving all paid results. No money or source reset.
+- One fresh-context read-only whole-branch reviewer is checking product checkpoint
+  `eecba8f`. Review overlaps external acceptance to use the long build interval;
+  author-discovered persistence correction is tracked separately. Human result review
+  remains pending. No additional implementation/review agents were dispatched.
+
+### P2-010 - Whole-branch review and one regression fix pass
+
+- **Actor/category:** Codex and one fresh-context reviewer / review and debugging.
+  The native Superpowers workflow explicitly requires this one review; model
+  `gpt-6-astra`, high effort, inspected `6db76b2..eecba8f` read-only. It ran 160
+  focused keyless tests and temporary synthetic probes, without provider calls,
+  credentials, real artifacts or ledger access.
+- **Verdict at checkpoint:** not ready; no Critical, four Important (elapsed
+  deadlines, replay provenance/prompt binding, duplicate allowance bootstrap,
+  cosine vector persistence). One Minor: blanket `will` can conservatively refuse
+  historical commitment questions. The Minor is deferred, not silently fixed.
+- **Verification/repair:** read Superpowers receiving-code-review instructions;
+  checked findings against actual code and reproduced them before fixes. One fix
+  pass added bounded waits and lower-attempt-limit enforcement; source-derived
+  replay checks/canonical trace hashes; independent durable budget-path binding;
+  and hash-verified float32 references with bounded Chroma drift. No uncertain
+  provider call was repeated and no budget was reset.
+- **RED/GREEN:** dispatch/count/CLI bootstrap four expected failures; coherent
+  replay eight failures/five passes, then 13 passes; 4096D/reference regressions
+  failed before the 24-test index/retrieval GREEN. Provider/budget focused suite
+  59 passed in 23.33s. A real HTTPX progressing-stream regression passed separately.
+- **Whole gate:** `pytest -m 'not integration' --basetemp=.pytest-tmp/p2-review-full -q`
+  returned 310 passed, one Windows symlink skip, seven integration deselected in
+  72.87s. Ruff check/format, locked sync/check, package build, all installed CLI
+  help and original/synthetic RAG smokes passed. Actual API acceptance is pending.
+- **Trade-offs:** caller timeout cannot prove remote cancellation; full reservation
+  remains unknown, late results have no terminal-state/cache authority, and 16
+  unfinished workers block further sends. Budget recovery/moving now needs explicit
+  authority reconciliation. Canonical vector references add about 345 MiB locally.
+- **Human review:** architecture/native plan approved earlier; these actual review
+  outcomes and final phase results await human review. No second reviewer or
+  implementer agent, push, PR, merge or later phase was started.

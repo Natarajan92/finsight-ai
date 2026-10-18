@@ -40,7 +40,11 @@ def setup_dispatch(tmp_path):
             ),
         ]
     )
-    ledger = b.BudgetLedger.initialize(tmp_path / "budget.sqlite3", "finsight-testing-2026-10-18")
+    ledger = b.BudgetLedger.initialize(
+        tmp_path / "budget.sqlite3",
+        "finsight-testing-2026-10-18",
+        anchor_path=tmp_path / "authority.json",
+    )
     dispatch = d.GuardedDispatcher(ledger, rates)
     estimate = c.CallEstimate(
         request_id="call",
@@ -204,3 +208,37 @@ def test_lower_configured_phase_limit_is_enforced_atomically(setup_dispatch):
         bounded.execute(
             estimate, lambda: pytest.fail("lower cap bypassed"), lambda _: None, context
         )
+
+
+def test_elapsed_attempt_limit_retains_reservation_and_discards_late_result(setup_dispatch):
+    from threading import Event
+    from time import monotonic
+
+    from finsight.contracts import BaselineConfig
+
+    dispatch, estimate, _, _ = setup_dispatch
+    dispatch.config = BaselineConfig(attempt_timeout_s=0.05)
+    context = CallContext("run", 2, monotonic() + 1)
+    release, finished = Event(), Event()
+    calls, observed = [], []
+
+    def send():
+        calls.append(1)
+        try:
+            release.wait(2)
+            return object()
+        finally:
+            finished.set()
+
+    started = monotonic()
+    try:
+        with pytest.raises(FinsightError, match="provider_timeout"):
+            dispatch.execute(estimate, send, lambda raw: observed.append(raw), context)
+        assert monotonic() - started < 0.5
+        assert len(dispatch.attempts) == 1 and calls == [1]
+        assert dispatch.ledger.snapshot().reserved_usd == Decimal("0.0015")
+    finally:
+        release.set()
+        assert finished.wait(1)
+    assert observed == []
+    assert dispatch.ledger.snapshot().reserved_usd == Decimal("0.0015")

@@ -4,7 +4,6 @@ import json
 from pathlib import Path
 from time import perf_counter
 
-from finsight.citations.validation import validate_draft
 from finsight.config import Settings
 from finsight.contracts import BaselineConfig, QueryRequest
 from finsight.contracts.base import Contract, NonBlank, fingerprint
@@ -19,6 +18,7 @@ from finsight.runtime.errors import FinsightError
 from finsight.runtime.factory import create_application, local_assets, preflight, spending_setup
 
 from .benchmark import load_benchmark
+from .replay import validate_campaign_trace
 from .splits import SplitManifest, SplitPolicy, freeze_splits, validate_split_pair
 
 
@@ -82,6 +82,7 @@ def _trace_summary(trace, question_id: str, latency_ms: float) -> dict[str, obje
         usage=trace.answer.usage.model_dump(mode="json"),
         error_code=trace.answer.error.code if trace.answer.error else None,
         prompt_fingerprint=trace.prompt_fingerprint,
+        trace_fingerprint=fingerprint(trace.model_dump(mode="json")),
     )
 
 
@@ -113,6 +114,7 @@ def run_development_campaign(
     )
     try:
         index_id = retriever.manifest.fingerprint()
+        catalog = retriever.catalog
     finally:
         retriever.store.client.close()
     split = SplitManifest.model_validate_json(
@@ -148,26 +150,18 @@ def run_development_campaign(
                     raise FinsightError("campaign_integrity")
                 for case, row in zip(cases, receipt["runs"], strict=True):
                     trace = sink.load(row["trace_id"])
-                    if (
-                        row["question_id"] != case.question_id
-                        or trace.request != case.request
-                        or trace.index_fingerprint != index_id
-                        or trace.config_fingerprint != config.fingerprint()
-                        or trace.source_fingerprint != corpus.source_fingerprint
-                    ):
+                    if row["question_id"] != case.question_id:
                         raise FinsightError("campaign_integrity")
-                    if trace.answer.status in {"answered", "partial"}:
-                        if trace.draft is None or trace.packet is None:
-                            raise FinsightError("campaign_integrity")
-                        checked = validate_draft(
-                            trace.draft,
-                            trace.packet,
-                            pages,
-                            trace.answer.usage,
-                            request=case.request,
-                        )
-                        if checked != trace.answer:
-                            raise FinsightError("campaign_integrity")
+                    validate_campaign_trace(
+                        trace,
+                        case.request,
+                        catalog,
+                        corpus,
+                        pages,
+                        config,
+                        index_id,
+                        receipt["rate_fingerprint"],
+                    )
                     if row != _trace_summary(trace, case.question_id, row["latency_ms"]):
                         raise FinsightError("campaign_integrity")
                 return {**receipt, "replay": True, "campaign_id": campaign_id}
@@ -200,6 +194,16 @@ def run_development_campaign(
                 trace = sink.load(service.last_trace_id)
                 if trace.answer != answer:
                     raise FinsightError("campaign_integrity")
+                validate_campaign_trace(
+                    trace,
+                    case.request,
+                    catalog,
+                    corpus,
+                    pages,
+                    config,
+                    index_id,
+                    receipt["rate_fingerprint"],
+                )
                 receipt["runs"].append(_trace_summary(trace, case.question_id, elapsed))
                 receipt.pop("pending_question_id")
                 write_json_atomic(path, receipt)

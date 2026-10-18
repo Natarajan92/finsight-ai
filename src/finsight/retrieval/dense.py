@@ -4,7 +4,7 @@ from finsight.contracts import QueryRequest, RetrievalCandidate, Score, SourceMe
 from finsight.contracts.base import fingerprint
 from finsight.indexing.catalog import page_key
 from finsight.indexing.embedding_cache import normalize_vector
-from finsight.indexing.store import chunk_metadata, vector_hash
+from finsight.indexing.store import chunk_metadata
 from finsight.ingestion.manifest import company_key
 from finsight.runtime.errors import FinsightError
 from finsight.runtime.ports import CallContext
@@ -75,8 +75,12 @@ class DenseRetriever:
             if set(stored["ids"]) != set(identities):
                 raise FinsightError("index_integrity")
             for identity, stored_vector in zip(stored["ids"], stored["embeddings"], strict=True):
-                if vector_hash(stored_vector) != self.manifest.vector_hashes[identity]:
-                    raise FinsightError("index_integrity")
+                self.store.validate_vector(
+                    identity,
+                    stored_vector,
+                    self.manifest.vector_hashes[identity],
+                    self.config.embedding_dimension,
+                )
         chunks = self.catalog.chunks_by_id
         documents = {d.document_id: d for d in self.corpus.documents}
         joined = []

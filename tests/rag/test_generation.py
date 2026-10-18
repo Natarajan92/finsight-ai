@@ -15,6 +15,35 @@ from finsight.runtime.errors import FinsightError
 from finsight.runtime.ports import CallContext
 
 
+def test_elapsed_generation_timeout_never_accepts_late_usage(generation_setup, monkeypatch):
+    from threading import Event
+    from time import monotonic
+
+    generator, prompt, _, _, _, dispatch, chat = generation_setup
+    dispatch.config = dispatch.config.model_copy(update={"attempt_timeout_s": 0.05})
+    original = chat._client.messages.with_raw_response.create
+    release, finished = Event(), Event()
+
+    def slow(**body):
+        try:
+            release.wait(2)
+            return original(**body)
+        finally:
+            finished.set()
+
+    monkeypatch.setattr(chat._client.messages.with_raw_response, "create", slow)
+    started = monotonic()
+    try:
+        with pytest.raises(FinsightError, match="provider_timeout"):
+            generator.generate(prompt, CallContext("run", 2, monotonic() + 1))
+        assert monotonic() - started < 0.5
+    finally:
+        release.set()
+        assert finished.wait(1)
+    assert len(dispatch.attempts) == 1 and dispatch.attempts[0].usage is None
+    assert dispatch.ledger.snapshot().reserved_usd > 0
+
+
 @pytest.fixture
 def generation_setup(tmp_path, monkeypatch, synthetic_rates, source, score):
     assert importlib.util.find_spec("finsight.generation.claude"), "Missing grounded generation"
@@ -79,7 +108,11 @@ def generation_setup(tmp_path, monkeypatch, synthetic_rates, source, score):
         return SimpleNamespace(parse=lambda: anthropic.types.Message.model_validate(response))
 
     monkeypatch.setattr(chat._client.messages.with_raw_response, "create", create)
-    ledger = BudgetLedger.initialize(tmp_path / "budget.sqlite3", BaselineConfig().budget_id)
+    ledger = BudgetLedger.initialize(
+        tmp_path / "budget.sqlite3",
+        BaselineConfig().budget_id,
+        anchor_path=tmp_path / "authority.json",
+    )
     dispatcher = GuardedDispatcher(ledger, synthetic_rates)
 
     class Counter:

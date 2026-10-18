@@ -23,5 +23,6 @@ class Settings(BaseSettings):
     index_root: Path = Path("data/indexes")
     rates_path: Path = Path("data/cache/budget/rates.json")
     ledger_path: Path = Path("data/cache/budget/testing.sqlite3")
+    budget_anchor_path: Path = Path("results/testing-budget-identity.json")
     trace_root: Path = Path("results/traces")
     index_job_timeout_s: int = Field(default=14400, ge=60, le=14400)

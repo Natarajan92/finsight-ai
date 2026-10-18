@@ -216,3 +216,34 @@ def test_non_axis_vectors_keep_integrity_after_hnsw_buffer_flush(index_setup, mo
         assert retriever.manifest == manifest
     finally:
         retriever.store.client.close()
+
+
+def test_4096_dimension_cosine_vectors_survive_persistence(index_setup, monkeypatch):
+    import random
+
+    setup = list(index_setup)
+    setup[3] = setup[3].model_copy(
+        update={"embedding_dimension": 4096, "chunk_tokens": 10, "overlap_tokens": 1}
+    )
+    randomizer = random.Random(42)
+
+    def embed(texts):
+        return [[randomizer.uniform(-1, 1) for _ in range(4096)] for _ in texts]
+
+    monkeypatch.setattr(setup[4], "embed_documents", embed)
+    manifest = build(setup)
+    assert manifest.chunk_count > 100
+    retriever = reopen(setup)
+    try:
+        assert retriever.manifest == manifest
+    finally:
+        retriever.store.client.close()
+
+
+def test_altered_canonical_vector_reference_is_rejected(index_setup):
+    manifest = build(index_setup)
+    root = index_setup[5] / "vector-references"
+    root.mkdir(exist_ok=True)
+    (root / (manifest.chunk_ids[0] + ".f32")).write_bytes(b"altered")
+    with pytest.raises(FinsightError, match="index_integrity"):
+        reopen(index_setup)

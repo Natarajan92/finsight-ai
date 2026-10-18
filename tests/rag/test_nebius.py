@@ -9,6 +9,55 @@ import pytest
 from finsight.runtime.errors import FinsightError
 
 
+def test_elapsed_embedding_timeout_never_caches_a_late_response(embedding_setup):
+    import json
+    from dataclasses import replace
+    from threading import Event
+    from time import monotonic
+
+    from finsight.runtime.ports import CallContext
+
+    backend, cache, dispatch, _, _ = embedding_setup
+    dispatch.config = dispatch.config.model_copy(update={"attempt_timeout_s": 0.05})
+    release, finished = Event(), Event()
+    calls = []
+
+    class ProgressingStream(httpx.SyncByteStream):
+        def __iter__(self):
+            try:
+                for _ in range(200):
+                    if release.wait(0.01):
+                        break
+                    yield b" "  # Every read progresses inside its short transport timeout.
+                yield json.dumps(
+                    {
+                        "model": backend.config.embedding_model,
+                        "data": [{"index": 0, "embedding": [1, 0, 0]}],
+                        "usage": {"prompt_tokens": 1},
+                    }
+                ).encode()
+            finally:
+                finished.set()
+
+    def slow(request):
+        calls.append(request)
+        return httpx.Response(200, stream=ProgressingStream())
+
+    with httpx.Client(transport=httpx.MockTransport(slow)) as client:
+        bound = replace(backend, client=client).for_run(CallContext("run", 2, monotonic() + 1))
+        started = monotonic()
+        try:
+            with pytest.raises(FinsightError, match="provider_timeout"):
+                bound.embed_documents(["late document"])
+            assert monotonic() - started < 0.5
+        finally:
+            release.set()
+            assert finished.wait(1)
+    assert len(calls) == len(dispatch.attempts) == 1
+    assert cache.get(cache.key("late document", "document")) is None
+    assert dispatch.ledger.snapshot().reserved_usd > 0
+
+
 def test_vectors_cached_unit_normalized_with_explicit_request(embedding_setup):
     backend, _, dispatch, calls, _ = embedding_setup
     first = backend.embed_documents(["same text", "second text"])

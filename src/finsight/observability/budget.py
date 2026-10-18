@@ -1,6 +1,7 @@
 """Fail-closed SQLite reservations. Bootstrap is explicit and never overwrites."""
 
 import json
+import os
 import sqlite3
 from contextlib import closing, contextmanager
 from decimal import Decimal
@@ -32,20 +33,38 @@ SCHEMA = (
 
 
 class BudgetLedger:
-    def __init__(self, path: Path, budget_id: str):
+    def __init__(self, path: Path, budget_id: str, *, anchor_path: Path):
         self.path = Path(path).resolve()
         self.budget_id = budget_id
         self.marker = self.path.with_suffix(self.path.suffix + ".identity.json")
+        self.anchor = Path(anchor_path).resolve()
+
+    def anchor_identity(self):
+        return {**IDENTITY, "ledger_path": os.path.normcase(str(self.path))}
 
     @classmethod
-    def initialize(cls, path: Path, budget_id: str) -> "BudgetLedger":
-        ledger = cls(path, budget_id)
+    def initialize(
+        cls,
+        path: Path,
+        budget_id: str,
+        *,
+        anchor_path: Path,
+        activity_roots: tuple[Path, ...] = (),
+    ) -> "BudgetLedger":
+        ledger = cls(path, budget_id, anchor_path=anchor_path)
         if budget_id != IDENTITY["budget_id"]:
             raise FinsightError("budget_identity")
-        if ledger.path.exists() or ledger.marker.exists():
+        if ledger.path.exists() or ledger.marker.exists() or ledger.anchor.exists():
             raise FinsightError("budget_exists", "Existing budgets cannot be reset")
+        if any(path.is_file() for root in activity_roots for path in root.rglob("*")):
+            raise FinsightError("budget_reconciliation_required")
         ledger.path.parent.mkdir(parents=True, exist_ok=True)
         try:
+            ledger.anchor.parent.mkdir(parents=True, exist_ok=True)
+            with ledger.anchor.open("x", encoding="utf-8") as stream:
+                json.dump(ledger.anchor_identity(), stream, sort_keys=True)
+                stream.flush()
+                os.fsync(stream.fileno())
             with ledger.marker.open("x", encoding="utf-8") as stream:
                 json.dump(IDENTITY, stream, sort_keys=True)
             # Exclusive marker creation serializes competing bootstrap attempts.
@@ -60,11 +79,11 @@ class BudgetLedger:
         except (OSError, sqlite3.Error):
             # Leave identity marker on failure: never silently recover by resetting money.
             raise FinsightError("budget_unavailable") from None
-        return cls.open(ledger.path, budget_id)
+        return cls.open(ledger.path, budget_id, anchor_path=ledger.anchor)
 
     @classmethod
-    def open(cls, path: Path, budget_id: str) -> "BudgetLedger":
-        ledger = cls(path, budget_id)
+    def open(cls, path: Path, budget_id: str, *, anchor_path: Path) -> "BudgetLedger":
+        ledger = cls(path, budget_id, anchor_path=anchor_path)
         with ledger._transaction():
             pass
         return ledger
@@ -73,10 +92,12 @@ class BudgetLedger:
     def _transaction(self):
         if self.budget_id != IDENTITY["budget_id"]:
             raise FinsightError("budget_identity")
-        if not self.path.is_file() or not self.marker.is_file():
+        if not self.path.is_file() or not self.marker.is_file() or not self.anchor.is_file():
             raise FinsightError("budget_unavailable")
         connection = None
         try:
+            if json.loads(self.anchor.read_text(encoding="utf-8")) != self.anchor_identity():
+                raise FinsightError("budget_identity")
             if json.loads(self.marker.read_text(encoding="utf-8")) != IDENTITY:
                 raise FinsightError("budget_identity")
             uri = "file:" + quote(self.path.as_posix(), safe="/:") + "?mode=rw"

@@ -8,6 +8,7 @@ from uuid import uuid4
 from finsight.contracts import BaselineConfig
 from finsight.contracts.base import fingerprint
 from finsight.contracts.tracing import ProviderAttempt
+from finsight.runtime.deadlines import bounded_call
 from finsight.runtime.errors import FinsightError
 from finsight.runtime.ports import CallContext, TokenCounter
 
@@ -34,9 +35,10 @@ def validate_question(
 
 
 class ClaudeTokenCounter:
-    def __init__(self, client, model: str):
+    def __init__(self, client, model: str, *, attempt_timeout_s: float = 20):
         self.client = client
         self.model = model
+        self.attempt_timeout_s = min(20, attempt_timeout_s)
         self._counts = {}
         self._attempts = []
         self.records = []
@@ -69,8 +71,9 @@ class ClaudeTokenCounter:
         started = context.clock()
         error = None
         try:
-            client = self.client.with_options(max_retries=0, timeout=min(20, context.remaining()))
-            response = client.messages.count_tokens(**payload)
+            timeout = min(self.attempt_timeout_s, context.remaining())
+            client = self.client.with_options(max_retries=0, timeout=timeout)
+            response = bounded_call(lambda: client.messages.count_tokens(**payload), timeout)
             count = response.input_tokens
             if type(count) is not int or count < 0:
                 raise ValueError("Missing token estimate")
