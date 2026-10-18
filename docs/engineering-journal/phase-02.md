@@ -338,3 +338,10 @@ from resolution alone. No provider credits have been consumed in this planning.
 - Focused GREEN: 16 passed in 1.12s. A Windows file-deletion regression exposed an unclosed bootstrap connection; explicit connection closing fixed the resource lifetime. An additional RED test demonstrated premature settlement of an unverified usage-priced amount; incomplete token categories now retain the complete reservation and an unknown cost.
 - Covered phase/global limits, two-connection contention, restart persistence, duplicate dispatch, deleted/corrupt storage, honest over-reservation cost, stale/missing/mismatched rates, bounded explicit-status retry, no timeout retry, and deadline denial. Persisted attempts retain observed usage and basis; adapters must use dispatcher timeout per physical send.
 - Gates: whole keyless suite, Ruff check/format, installed original smoke/CLI help, locked sync/check, package build and diff checks passed; exact suite totals recorded in the native ledger. No paid operations.
+
+### Task 3 - Tokenizer integrity and exact-span fixed windows
+
+- RED: seven failures and two fixture errors demonstrated missing tokenizer/chunking modules. Corrected a synthetic fixture to the existing Page contract's `empty` status (the plan's descriptive blank page is not a new runtime enum).
+- GREEN: nine focused tests passed in 1.37s, including genuine locally trained BPE/Unicode offsets and re-encoding, exact 0:400/340:740/680:800 character-token windows, repeated rows, full character coverage, stable IDs, page isolation, empty/error pages and visible table-cut diagnostics.
+- Explicit tokenizer preparation downloads only three pinned JSON files into staging; offline loading verifies asset bytes, URLs, revision and library version without downloads. No fallback token estimate replaces unavailable assets. A source that cannot form a nonblank bounded exact window fails explicitly.
+- Gates: whole keyless suite, Ruff check/format (90 files), original smoke/CLI help, locked sync/check, package build and diff check passed. No public tokenizer preparation or model call occurred yet; actual production asset verification remains Task 10.

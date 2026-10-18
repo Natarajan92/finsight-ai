@@ -155,7 +155,7 @@ Add named tests `test_timeout_retains_full_reservation_after_restart`, `test_two
 
 The artifact manifest records the exact three source URLs at the pinned revision, SHA-256s, tokenizer library/version and special-token settings. Use `add_special_tokens=False` for source chunk counts. Download explicitly to an ignored staging directory, validate JSON/hashes and atomically publish; offline loading never downloads. Use source character offsets, re-count candidate substrings after choosing boundaries, retain coverage/progress, and derive overlap from valid character boundaries. Warn on a financial-looking page when a cut is inside a line/table block or separates an available header; diagnostics are conservative heuristics, not table reconstruction.
 
-- [ ] **Step 1 - Write failing tokenizer/chunker tests.** With `char_tokenizer` and an 800-character synthetic page:
+- [x] **Step 1 - Write failing tokenizer/chunker tests.** With `char_tokenizer` and an 800-character synthetic page:
 
 ```python
 assert [(s.char_start, s.char_end) for c in chunks for s in c.source_spans] == [
@@ -171,10 +171,10 @@ assert all(
 ```
 
 Test `test_unicode_and_repeated_rows_keep_correct_occurrence`, `test_all_source_characters_covered`, `test_page_boundaries_never_overlap`, `test_empty_pages_emit_no_chunks_but_keep_diagnostics`, `test_wrong_document_or_error_page_rejected`, `test_table_boundary_risk_is_visible`, `test_artifact_tamper_rejected_without_download`, and stable IDs under repeat runs/config changes. The local tiny tokenizer fixture must exercise genuine tokenizer offset/re-encoding behavior without a remote download.
-- [ ] **Step 2 - Run RED:** `uv run --locked pytest tests/rag/test_tokenizer.py tests/rag/test_fixed_chunking.py --basetemp=.pytest-tmp/p2 -q`.
-- [ ] **Step 3 - Implement source-preserving windows, artifact validation and diagnostics.** Expose `tokenizer_unavailable`, `tokenizer_integrity` and `invalid_source_span` errors rather than character-count fallbacks. Keep hosted model revision unknown unless the provider exposes it; keep the pinned tokenizer revision distinct.
-- [ ] **Step 4 - Run GREEN:** same tests plus existing provenance/extraction tests; source numbers, signs, years and units remain byte-for-byte equivalent as Unicode strings.
-- [ ] **Step 5 - Common gate and commit:** `feat: chunk financial pages with exact token provenance`.
+- [x] **Step 2 - Run RED:** `uv run --locked pytest tests/rag/test_tokenizer.py tests/rag/test_fixed_chunking.py --basetemp=.pytest-tmp/p2 -q`.
+- [x] **Step 3 - Implement source-preserving windows, artifact validation and diagnostics.** Expose `tokenizer_unavailable`, `tokenizer_integrity` and `invalid_source_span` errors rather than character-count fallbacks. Keep hosted model revision unknown unless the provider exposes it; keep the pinned tokenizer revision distinct.
+- [x] **Step 4 - Run GREEN:** same tests plus existing provenance/extraction tests; source numbers, signs, years and units remain byte-for-byte equivalent as Unicode strings.
+- [x] **Step 5 - Common gate and commit:** `feat: chunk financial pages with exact token provenance`.
 
 ## Task 4: Guarded Nebius embeddings with durable role-aware caching
 
