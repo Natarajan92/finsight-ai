@@ -132,7 +132,7 @@ Also reject nonfinite rates/limits, semantic/rerank baseline configuration, unbo
 
 Use integer USD micro-units with upward rounding for reservations and Decimal input/output; never binary-float money. SQLite uses `BEGIN IMMEDIATE`, unique request IDs, integrity/schema checks and explicit states `reserved`, `dispatched`, `settled`, `unknown`. Keep an adjacent budget-identity marker and write the budget ID into run/index records. Missing DB after marker/records, mismatched IDs or corruption blocks dispatch. Initial bootstrap is an explicit command; no automatic reset. An already-dispatched request ID cannot dispatch twice.
 
-- [ ] **Step 1 - Write failing budget/dispatch tests**, including:
+- [x] **Step 1 - Write failing budget/dispatch tests**, including:
 
 ```python
 ledger.reserve("one", "anthropic", "claude-sonnet-5", Decimal("0.74"), 2)
@@ -142,10 +142,10 @@ assert BudgetLedger.open(path, budget_id).snapshot().reserved_usd == Decimal("0.
 ```
 
 Add named tests `test_timeout_retains_full_reservation_after_restart`, `test_two_connections_cannot_overreserve`, `test_duplicate_request_cannot_dispatch_twice`, `test_missing_or_corrupt_ledger_blocks_send`, `test_actual_cost_over_reservation_is_recorded_not_clamped`, `test_expired_or_missing_rate_blocks_send`, `test_retry_reserves_again_and_stops_at_two_attempts`, and `test_deadline_prevents_next_dispatch`. Assert transport call counts, retained totals and budget/error codes; uncertain failure keeps `usage=None` and the whole reservation.
-- [ ] **Step 2 - Run RED:** `uv run --locked pytest tests/rag/test_budget.py tests/rag/test_dispatch.py --basetemp=.pytest-tmp/p2 -q`; expect missing ledger/dispatcher.
-- [ ] **Step 3 - Implement transactional authorization and per-attempt execution.** Include maximum input/output/overhead in estimates. Pass `min(20, remaining_deadline)` into each transport attempt. Allow one new attempt only for explicit eligible status responses; a timeout/disconnect is uncertain and does not retry. Reconcile usage before parsing/generation validation can discard it. Unknown usage retains reserved money. Record actual overrun honestly and block subsequent calls if limits are exhausted.
-- [ ] **Step 4 - Run GREEN:** same focused tests, including both phase/global limits, repeat-open, concurrency and retry assertions. Verify a denied call never executes `send`.
-- [ ] **Step 5 - Common gate and commit:** `feat: enforce persistent provider spending limits`.
+- [x] **Step 2 - Run RED:** `uv run --locked pytest tests/rag/test_budget.py tests/rag/test_dispatch.py --basetemp=.pytest-tmp/p2 -q`; expect missing ledger/dispatcher.
+- [x] **Step 3 - Implement transactional authorization and per-attempt execution.** Include maximum input/output/overhead in estimates. Pass `min(20, remaining_deadline)` into each transport attempt. Allow one new attempt only for explicit eligible status responses; a timeout/disconnect is uncertain and does not retry. Reconcile usage before parsing/generation validation can discard it. Unknown usage retains reserved money. Record actual overrun honestly and block subsequent calls if limits are exhausted.
+- [x] **Step 4 - Run GREEN:** same focused tests, including both phase/global limits, repeat-open, concurrency and retry assertions. Verify a denied call never executes `send`.
+- [x] **Step 5 - Common gate and commit:** `feat: enforce persistent provider spending limits`.
 
 ## Task 3: Pinned tokenizer and exact-span fixed chunking
 

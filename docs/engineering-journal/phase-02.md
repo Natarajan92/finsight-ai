@@ -331,3 +331,10 @@ from resolution alone. No provider credits have been consumed in this planning.
 - GREEN: focused configuration/runtime suite 28 passed in 20.89s; whole keyless suite 159 passed, one Windows symlink skip, four integration deselected in 28.41s. First cold import was interrupted for diagnosis; a fresh timed run completed without a compatibility failure.
 - Gates: `uv lock --check`, locked dev sync, Ruff check/format (79 files), existing synthetic smoke/CLI help, `uv build` and `git diff --check` passed. Package operations used the native-account temporary uv cache, avoiding the earlier cache ownership conflict.
 - No model/tokenizer download or paid call. Human confirmed local key configuration; key values were neither requested in chat nor inspected.
+
+### Task 2 - Persistent budget authorization
+
+- RED: 13 expected fixture failures for the missing ledger/dispatcher. Added transactional micro-USD reservations, explicit bootstrap/identity marker, integrity/schema checks, unique request identities, retained unknown billing and current official-source rate identities.
+- Focused GREEN: 16 passed in 1.12s. A Windows file-deletion regression exposed an unclosed bootstrap connection; explicit connection closing fixed the resource lifetime. An additional RED test demonstrated premature settlement of an unverified usage-priced amount; incomplete token categories now retain the complete reservation and an unknown cost.
+- Covered phase/global limits, two-connection contention, restart persistence, duplicate dispatch, deleted/corrupt storage, honest over-reservation cost, stale/missing/mismatched rates, bounded explicit-status retry, no timeout retry, and deadline denial. Persisted attempts retain observed usage and basis; adapters must use dispatcher timeout per physical send.
+- Gates: whole keyless suite, Ruff check/format, installed original smoke/CLI help, locked sync/check, package build and diff checks passed; exact suite totals recorded in the native ledger. No paid operations.
