@@ -4,8 +4,8 @@
 - Source of truth: [project.md](../../../project.md).
 - Branch: `feat/phase-2-baseline-rag`.
 - Base: merged Phase 1, `6db76b2c887e86aca6fa58ab08706443b0bd637b`.
-- Status: conversational architecture approved by the human in P2-004. This
-  written specification requires review before the implementation plan is written.
+- Status: conversational architecture approved in P2-004; this written spec was
+  reviewed and approved by the human in P2-006. Implementation-plan review follows.
 - Scope: design documentation only at this checkpoint. No product dependency,
   runtime implementation, paid request, push, PR, or merge is part of this change.
 
@@ -499,9 +499,10 @@ Framework/provider package versions are not installed or claimed verified here.
 
 ## 12. Review boundary
 
-P2-004 approves the architecture presented in chat, budget subdivision/reserve, and
-continuation of planning. Review this written specification next. After that review,
-write and self-review the implementation plan with exact interfaces, dependency
-pins, test cycles, commands, and execution method. Product implementation starts
-only after the plan review. These review stages follow the installed Superpowers
-brainstorming workflow; they do not imply provider calls or publication occurred.
+P2-004 approved the architecture presented in chat and budget subdivision/reserve.
+P2-006 approved this written specification and requested the detailed implementation
+plan. The [implementation plan](../plans/2026-10-18-phase-2-baseline-rag.md) records
+exact interfaces, dependency pins, test cycles, commands, and execution choices.
+Product implementation starts after plan review and execution-method selection.
+These review stages follow the installed Superpowers workflow; they do not imply
+provider calls or publication occurred.

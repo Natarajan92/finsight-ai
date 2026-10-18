@@ -171,3 +171,136 @@ history supplies the final commit identity. Written-spec review remains pending.
 No real corpus/provider integration or holdout evaluation was executed at this
 documentation checkpoint. Provider latency, model quality, and billed runtime cost
 remain unmeasured; no Nebius/Claude request has been made.
+
+## P2-006 - Written design approved for implementation planning
+
+- **Actor/category:** Human / written-spec review and planning instruction.
+- **Date/time:** 2026-10-18 IST; exact message time unavailable.
+- **Branch/starting SHA:** `feat/phase-2-baseline-rag` at
+  `f8c29d3f721d7b287f4853f3932fb758cf539894`.
+
+### Original prompt
+
+> reviewed, please prepare detailed implementaion plan
+
+### Decision
+
+- **Human review status: REVIEWED** for the written Phase 2 specification linked
+  in the immediately preceding response. Human reasoning beyond this approval was
+  not supplied. The requested next deliverable is the detailed implementation plan.
+- This approves writing the plan; it does not claim a then-nonexistent plan was
+  reviewed, select an execution method, or authorize publication/merge.
+- Updated only the spec's review status/handoff link; its approved architectural
+  requirements remain in place.
+
+## P2-007 - Detailed implementation plan and dependency investigation
+
+- **Actor/category:** Codex / planning, documentation, verification and environment diagnosis.
+- **Recording clocks:** preparation began after 16:34:18 IST; review continued after
+  16:43:17 IST on 2026-10-18. Exact human message time is unavailable.
+- **Branch/base:** `feat/phase-2-baseline-rag`, `f8c29d3`.
+- **Goal:** Make the approved design executable as reviewed tasks with explicit
+  producer/consumer interfaces, files, dependency pins, RED/GREEN checks, spending
+  gates, real-source acceptance and execution-method choice.
+
+### Proposal and self-review
+
+- Used installed `superpowers:writing-plans`; ten tasks cover runtime contracts,
+  ledger/dispatch, tokenizer/chunking, Nebius cache, persistent index/retrieval,
+  evidence/token budgets, Claude drafts, citations/arithmetic, service/CLI/traces,
+  and real-source acceptance/review. Every implementation step remains unchecked.
+- Added named tests for five high-risk conditions: uncertain billing/restart,
+  repeated/Unicode source spans, corrupt or incomplete indexes/metadata,
+  prompt-injection/gold leakage, and valid-looking wrong-span/operand references.
+- Self-review clarified explicit cross-period arithmetic, preserving final answers
+  in trace artifacts, SDK-native HTTP transport types, cache-key method signatures,
+  benchmark-private selected case IDs, ledger initialization before paid work, and
+  one paid smoke campaign instead of duplicate manual/test campaigns.
+- Native execution is recommended for the coupled interfaces; subagent-driven is
+  an alternative. No execution method is recorded as selected. No subagents were
+  dispatched for plan preparation or self-review.
+- Updated the spec review status, Phase 2 journal, prompt registry and journal index.
+  The plan maps each spec area to an owning task; later phases remain extension
+  descriptions. Plan review and implementation are pending.
+
+### Dependency and API evidence
+
+- Read public versioned PyPI JSON and published wheel files in memory without
+  importing/installing the proposed packages. Selected exact versions are in the
+  plan; existing product dependencies and `uv.lock` remain unchanged.
+- Final direct additions: langchain-core 1.6.12; langchain-anthropic 1.7.6;
+  langchain-chroma 1.1.0; chromadb 1.5.9; tokenizers 0.23.3; httpx 0.28.1;
+  anthropic 1.15.0; langsmith 0.14.11. Both platform resolutions selected 104
+  packages, including transitive httpx2 2.13.1. Resolution is not runtime/CI proof.
+- Metadata-only resolver invocation used `uv pip compile` with explicit
+  `--python-version 3.12 --python-platform x86_64-pc-windows-msvc` and independently
+  `--python-platform x86_64-unknown-linux-gnu`, `--only-binary :all:`,
+  `--no-python-downloads --default-index https://pypi.org/simple --no-progress
+  --no-header --no-annotate --quiet`, with input/output/cache files in process-owned
+  temporary directories. Final resolution exit codes: zero on both platforms.
+- The resolver reported one upstream metadata normalization warning: it removed
+  stray quotes from `>= '2.7'`. No project pin was changed to suppress that warning.
+- A transport-compatibility hypothesis was checked: Anthropic 1.15 uses HTTPX2,
+  whereas Nebius uses HTTPX. Published LangChain `_sdk_compat.py` and `_client_utils.py`
+  show SDK-native `DefaultHttpxClient` compatibility wrappers. The hypothesis that
+  declared latest versions necessarily mismatched was not upheld; no downgrade
+  was made. The plan still requires a real keyless constructor regression after
+  installation and forbids mixing transport client types.
+- Published Chroma wrapper source confirms `collection_configuration` and scored
+  by-vector search; the plan requires raw-distance verification instead of trusting
+  a method name containing `relevance_scores`.
+- Public Hugging Face metadata reports tokenizer revision
+  `1d8ad4ca9b3dd8059ad90a75d4983776a23d44af` for Qwen3-Embedding-8B.
+  No tokenizer/model assets or weights were downloaded for this planning turn.
+- Consulted official Qwen, Nebius embeddings, Claude counting and thinking-cost
+  documentation. Counting is documented as free but approximate; output limits
+  cover thinking and answer tokens together. No account credentials were read and
+  no Nebius/Claude endpoint was called. ContextHub tools remain unavailable.
+
+### Diagnosis and failed checks
+
+- The first pair of metadata-resolution commands failed before dependency solving:
+  `Failed to initialize cache ... Access is denied (os error 5)` under the ignored
+  sandbox-created `.pytest-tmp/phase2-plan` directory. Used installed
+  `superpowers:systematic-debugging` to inspect ACLs and compare execution identities.
+- ACL evidence: the sandbox SID owned the directory; write access belonged to
+  SYSTEM, Administrators and OWNER RIGHTS. Elevated metadata execution did not
+  have owner rights there. Hypothesis: actor/cache ownership, not dependency
+  conflicts. Retried unchanged pins/platforms with caches created by the resolver's
+  own process under its temporary directory. Both resolutions then passed; final
+  full-pin checks also passed. No ACL/global settings were changed. See BUG-008.
+- First formatting check failed on the new plan's Python Markdown fences; it showed
+  quote/layout formatting diffs, with 72 other files already formatted. Applied
+  Ruff to that plan only, then the same whole-repo check passed for 73 files.
+  No executable product or test code was changed by formatting.
+
+### Verification
+
+| Command/check | Actual result |
+|---|---|
+| `.venv/Scripts/python.exe -B -m ruff check --no-cache .` | Passed: all checks |
+| `.venv/Scripts/python.exe -B -m ruff format --check --no-cache .` | Initial plan-fence failure; after scoped formatting, 73 files already formatted |
+| `.venv/Scripts/python.exe -B -m pytest -m 'not integration' --basetemp=.pytest-tmp/p2-plan-verification -q` | 142 passed; 1 skipped; 4 deselected in 10.35s |
+| `.venv/Scripts/finsight-smoke.exe` | Passed: synthetic contract roundtrip; page zero; cost unknown |
+| Final Windows/Linux wheel-only resolution | Passed: 104 packages on each; no installation |
+
+The skip is unavailable Windows symlink creation. The four deselected tests require
+the real local corpus. Future test snippets in the plan were not executed as tests;
+their syntax/structure is checked separately. No new product tests exist yet.
+Final structural/outgoing checks passed: ten tasks, 53 unchecked steps, nine
+syntax-valid future Python examples (parsed only, not executed), eight valid local
+links, unique eleven-column CSV records, six documentation-only outgoing paths,
+per-file size limits, and no matches for the checked credential/private-key patterns.
+Whole-repo Ruff formatting passed again for 73 files and `git diff --check` passed.
+The network-enabled process SID was explicitly checked as ending in 1001, distinct
+from the sandbox directory owner/process SID ending in 1003, confirming the
+execution-identity boundary in the cache diagnosis. A local planning commit follows
+this evidence update; its containing Git history records the final identity.
+No push/PR/merge or product implementation is claimed.
+
+### Remaining review and next step
+
+Human plan review and execution-method selection remain pending. Account-specific
+model availability, current rates, installed framework compatibility, tokenizer
+asset hashes and real RAG behavior are implementation gates, not established facts
+from resolution alone. No provider credits have been consumed in this planning.

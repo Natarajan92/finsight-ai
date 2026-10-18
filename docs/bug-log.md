@@ -130,3 +130,20 @@
   preserve existing diagnostics. Original split IDs/algorithm/fingerprints unchanged.
 - Focused correction suite: eight expected failures / three passes before fixes,
   then eleven passes. Whole-suite evidence and remaining Minor: P1-005.
+
+## BUG-008 - Dependency-planning cache belonged to another execution identity
+
+- Phase 2 planning only; no product dependency/runtime change. P2-007 records the
+  diagnostic commands and unchanged candidate pins.
+- Symptom: both Windows/Linux metadata-only `uv pip compile` invocations failed
+  creating `.pytest-tmp/phase2-plan/uv-cache*` with Access Denied (os error 5),
+  before package resolution. The input/cache parent was created by the sandbox
+  account, while network-enabled execution used a different identity.
+- Evidence: inspected ACL entries granted SYSTEM, Administrators and OWNER RIGHTS;
+  the sandbox process SID owned the directory. The resolver was failing at cache
+  initialization, not reporting incompatible requirements.
+- Corrective change: create the requirements/output/cache under the resolver
+  process's own temporary directory. No ownership/ACL/global configuration changes.
+- Verification: the unchanged pins resolved for Python 3.12 Windows and Linux;
+  final full-pin resolution passed independently on both with 104 packages each.
+  This establishes the cache-path workaround, not installed/runtime compatibility.

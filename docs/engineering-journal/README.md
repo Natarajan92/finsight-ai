@@ -9,7 +9,8 @@ contains the initial planning session and implementation approval.
 requirements, the plan-file review request, and subsequent implementation approval/evidence.
 
 [Phase 2](phase-02.md) records provider access, the shared testing budget,
-framework-led architecture review, and written-spec preparation/review status.
+framework-led architecture review, written-spec approval, and implementation-plan
+preparation/review status.
 
 - Stable IDs: P0-001, P0-002, then P1-001, etc. Record timezone and branch/base SHA.
 - Capture verbatim material prompts or label excerpts. Separate human words,
