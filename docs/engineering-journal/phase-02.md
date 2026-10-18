@@ -458,3 +458,46 @@ from resolution alone. No provider credits have been consumed in this planning.
 - **Human review:** architecture/native plan approved earlier; these actual review
   outcomes and final phase results await human review. No second reviewer or
   implementer agent, push, PR, merge or later phase was started.
+
+### P2-011 - Real embedding checkpoint and blocked acceptance
+
+- **Actor/category:** Codex / authorized provider testing and verification. Keys
+  were configured locally after the human's reply, "I’ll configure the keys locally";
+  only presence booleans and free model metadata were inspected. No key value was
+  printed or committed. The P2-008 native implementation/budget approval remained
+  the authority for paid tests; no new human retry approval is claimed.
+- **Committed product input:** `593ca533a67ebe06f745b13a289dfe8bf3a2febb`.
+  Reconciled all existing 44 settled ledger rows, schema/identity/integrity and
+  $0.002368 of accounted usage before adding the independent authority. No ledger
+  row changed and `BudgetLedger.initialize` was not called again. Backfilled all
+  704 canonical references from validated cache with original hashes matching.
+- **Paid run:** the resumed build completed another 68 batches, then timed out on
+  one uncertain attempt. Final totals: 113 Nebius physical attempts, 112 settled,
+  one unknown, 598,860 known input tokens, 1,792 cached/prepared chunk vectors.
+  No complete index manifest was published; no Claude inference or development/
+  holdout answer run occurred. Every completed vector and the unknown reservation
+  remain preserved. The queued acceptance helper detected failure and sent nothing.
+- **Accounting:** $0.006045 usage-priced, rounded-up ledger amount plus $0.000065
+  retained unknown reservation = $0.006110 allocated. Remaining working/Phase 2:
+  $3.993890/$0.743890; the $1 reserve is untouched. Provider invoices remain
+  authoritative and timed-out usage is unknown, not zero.
+- **Measured latency:** latest partial build 325.812 seconds excluding preflight,
+  69 attempts; timeout attempt 20.485 seconds including local accounting. Original
+  44 attempt latencies are unavailable. Query latency/answer support are unmeasured.
+- **Actual gate:** explicit seven real integration checks returned five passes,
+  two failures in 25.98s. The completed-index and campaign tests reject the missing
+  manifest before provider dispatch. All 55 original PDFs, both source JSONL files,
+  frozen split membership and Phase 1 caches remain unchanged. Two pytest-cache
+  permission warnings came from the native/sandbox identity boundary; no ACL or
+  product change was made to suppress them.
+- **Decision:** the reviewed design forbids automatic retries after uncertain
+  timeouts. Paid execution stopped with its full reservation intact. Prepared an
+  unpaid full-corpus recovery estimate and a concrete explicit-resume proposal,
+  preserving the 20-second attempt, 45-second answer and all money/model limits.
+  Task 10 remains incomplete; final successful acceptance, source-claim inspection,
+  human phase review and publication are pending. The branch/workspace are retained.
+- **Recovery preflight:** local-only, same fingerprints, 20,254 uncached chunks /
+  7,866,651 reservation tokens; estimated indexing $0.15733302 plus four questions
+  $0.18054656 = $0.33787958, within remaining $0.743890. Cached repeated text can
+  cover 24 additional unprepared windows. Provider calls zero. Post-integration
+  ledger reconciliation confirms unchanged 112 settled/one unknown and all totals.
