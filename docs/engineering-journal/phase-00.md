@@ -206,3 +206,33 @@ made. Test runtimes above are test-run durations, not answer latency measurement
   pattern/forbidden artifact/over-1MB findings; raw-data, private dotenv, cache and
   build ignore checks passed. This is a limited pattern scan, not a universal
   secret-detection guarantee. No financial source file changed.
+
+## P0-008 - Published CI diagnosis and PR permission boundary
+
+- Date: 2026-10-18, IST. Agent-authored diagnosis under human request P0-007;
+  this is not another human prompt or new Phase 1 approval.
+- Verified branch publication: remote `chore/phase-0-foundation` exactly matches
+  `4ede320b71111d8a87c5189fa5a93dafc8abd023`; main remains at the initial commit.
+- Attempted normal Phase 0 PR creation using connected GitHub: HTTP 403,
+  `Resource not accessible by integration`. Local `gh api user`/PR commands
+  returned 401 (authentication required). No credential was read or changed;
+  no PR exists and no merge was attempted. Public Actions status was readable;
+  job logs were retrieved with the connected GitHub tool.
+- First actual Actions run: `39111323063` failed. Windows failed interpreter setup;
+  Ubuntu reached tests with 61 passed / 4 errors from a nonexistent temp parent.
+  Both are CI setup defects, not failures hidden/skipped as passing tests.
+- Local reproduction: `uv run --locked pytest
+  tests/test_runtime.py::test_settings_boot_without_credentials_or_source_files
+  --basetemp=.pytest_cache/absent-ci-parent/ci --tb=line -q` gave 1 setup error,
+  matching the Linux FileNotFoundError.
+- Corrective scope: keep the approved Python/dependency pins and runtime unchanged;
+  use pinned setup-uv plus `uv python install`, and runner-owned temp storage.
+  Official action v9.0.0 ref verified as
+  `c771a70e6277c0a99b617c7a806ffedaca235ff9`; consulted the official uv CI guide.
+- Phase 1 base clarification requested: `project.md` requires latest merged main
+  or explicit stacked-branch approval. No answer/merge/stacking inferred.
+- Local correction verification and second CI result follow when observed.
+- Correction gates: `uv lock --check`, both Ruff checks,
+  `uv run --locked pytest --basetemp=.pytest-tmp -q` (65 passed in 2.43s),
+  `uv run --locked finsight-smoke`, `uv build`, and `git diff --check` all passed.
+  A clean root-level basetemp reproduces the fresh-parent condition safely.

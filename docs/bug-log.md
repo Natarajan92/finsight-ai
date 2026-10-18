@@ -49,3 +49,22 @@
 - Local shell reproduction verified the failure mode; actual remote workflow
   remains unexecuted pending push approval. No text-matching YAML test substituted
   for running CI.
+
+## BUG-003 - First published CI run exposed fresh-runner setup assumptions
+
+- Detected after the authorized Phase 0 push, prompt P0-007. Run:
+  https://github.com/Natarajan92/finsight-ai/actions/runs/39111323063
+- Windows setup-python could not find a Python 3.12.15 x64 build for Windows
+  2025. Local success used uv's standalone managed Python, a different source.
+- Linux installed successfully, then tests reported 61 passed / 4 setup errors:
+  `.pytest_cache/ci` had a nonexistent parent on a fresh checkout. Local runs had
+  already populated `.pytest_cache`, masking that assumption.
+- Root-cause evidence: read both actual job logs through the connected GitHub
+  tool. Local reproduction with `--basetemp=.pytest_cache/absent-ci-parent/ci`
+  produced the same FileNotFoundError before any product test behavior ran.
+- Correction: official pinned setup-uv action, uv 0.12.23, `uv python install`
+  respecting the unchanged `.python-version`; CI basetemp is a direct child of
+  the existing runner temp directory. Restricted local instructions now use the
+  ignored root `.pytest-tmp` path, whose parent exists on a fresh checkout.
+- No runtime code, Python/package pins, source documents or tests were changed.
+- Verification: local full gates and the new remote run are recorded in the journal.

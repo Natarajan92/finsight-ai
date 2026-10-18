@@ -71,3 +71,12 @@ test-driven-development (including writing-good-tests), systematic-debugging,
 verification-before-completion, requesting-code-review, receiving-code-review,
 and finishing-a-development-branch. No automated external chat capture is claimed.
 PDF inspection guidance was used during the audit.
+
+## Post-publication CI correction
+
+The first actual CI run showed that setup-python does not supply this exact patch
+version on Windows, while the already-working local interpreter came from uv.
+CI now uses official setup-uv v9.0.0 pinned to its verified commit, installs uv
+0.12.23, then runs `uv python install` using the existing pin. This follows the
+official uv CI guide above and preserves the approved runtime/dependency versions.
+Use an existing temp-directory parent, rather than assuming pytest's cache exists.

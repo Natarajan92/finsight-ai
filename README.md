@@ -32,7 +32,7 @@ owned by another account. Use task-local locations without changing global setti
 ```powershell
 $env:UV_CACHE_DIR = Join-Path $env:TEMP 'finsight-uv-cache'
 $env:UV_LINK_MODE = 'copy'
-uv run --locked pytest --basetemp=.pytest_cache/local
+uv run --locked pytest --basetemp=.pytest-tmp
 ```
 
 ## Verification
@@ -50,8 +50,10 @@ uv build
 Tests use synthetic fixtures and block socket connections. Integration markers are
 registered and excluded by default; explicitly use `pytest -m integration` only
 after the relevant credentials and spend approval. No integration tests exist yet.
-GitHub Actions runs the same foundation checks on Windows and Ubuntu with Python
-3.12.15. A local pass does not establish that remote CI has run.
+GitHub Actions installs pinned uv and uses `uv python install` to obtain Python
+3.12.15 on Windows and Ubuntu. CI test scratch space is under the existing runner
+temp directory; a fresh checkout does not need a pre-existing pytest cache.
+A local pass does not establish that remote CI has run.
 
 ## Architecture and data boundaries
 
