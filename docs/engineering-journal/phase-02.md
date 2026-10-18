@@ -576,3 +576,50 @@ from resolution alone. No provider credits have been consumed in this planning.
   executed scratch notebook are ignored. The delivered notebook is outputless.
   Local conventional commit only; the existing Phase 2 branch and outstanding
   full-corpus acceptance checkpoint remain for human review and manual testing.
+
+### P2-013 - Publish the reviewed branch without notebook outputs
+
+- **Time/actor/category:** 2026-10-18 IST, publication checks around 22:04;
+  Human / publication authorization.
+- **Exact material prompt:** "Push the code to github, while pushing notebook,
+  dont push the notebook outputs".
+- **Context:** branch `feat/phase-2-baseline-rag`, reviewed code commit `f262a09`;
+  remote `origin` is `https://github.com/Natarajan92/finsight-ai.git`. GitHub main
+  still resolves to `6db76b2`; the Phase 2 remote branch does not yet exist.
+  The local notebook has executed outputs, enabled example calls and an additional
+  embedding loop. Those local experiments remain untouched and are excluded from
+  publication; the committed notebook is outputless with network examples off.
+- **Authorized action:** push this feature branch only, preserving the existing
+  checkout, original files, budget and local executed notebook. No force push,
+  merge, branch deletion, paid test or Phase 2 acceptance claim is authorized by
+  this publication step. Superpowers finishing/verification workflow applied.
+- **Outgoing inspection:** all 163 new blobs relative to `origin/main` passed
+  the credential-pattern/private-artifact scan. Every outgoing notebook version
+  has empty outputs and null execution counts. Created an ignored committed-tree
+  snapshot to verify the published code without running local notebook experiments.
+  Pre-push results follow below; remote verification is reported after `git push`.
+- **Environment check:** snapshot Ruff lint/format and both synthetic smoke
+  commands passed with zero provider requests. An initial pytest invocation with
+  workspace `--basetemp=E:/maai-projects/finsight-ai/.pytest-tmp/push-v` returned
+  148 passes/171 fixture setup errors in 21.72 seconds because the native Windows
+  identity could not create that temporary directory. No product change or ACL
+  modification was made. Reran the same committed tests using a fresh uniquely
+  named directory under the native user's `TEMP` to resolve that environment issue.
+- **Pre-push evidence:** in the committed snapshot, using project `.venv` Python
+  and `PYTHONPATH=<snapshot>/src`, `python -B -m ruff check .` passed,
+  `python -B -m ruff format --check .` reported 132 formatted files,
+  `python -B -m finsight.smoke` and `python -B -m finsight.cli smoke --synthetic`
+  passed with zero provider requests. `python -B -m pytest --basetemp=<fresh
+  native-TEMP>/finsight-push-<unique> -q --tb=short` returned **318 passed, one
+  host symlink skip, seven opt-in integration tests deselected**, 62.12 seconds.
+  The committed notebook again checked outputless; a hash comparison confirms
+  the local executed notebook was unchanged. Only this journal and its prompt
+  registry entry are added for the publication checkpoint. Phase 2 paid/full-corpus
+  acceptance remains outstanding; this push does not close that gate.
+- **Publication block:** automatic approval review rejected the combined commit/
+  push command before execution. Its stated reason was that the configured
+  destination's trust/ownership came from tool output, while the human's push
+  authorization did not explicitly name `https://github.com/Natarajan92/finsight-ai`.
+  No push occurred. Preparing the local documentation commit separately is
+  unaffected; explicit approval of that exact destination is required before
+  retrying publication. No alternate execution path or force push was attempted.
