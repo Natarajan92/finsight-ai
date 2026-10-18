@@ -31,7 +31,7 @@ class AuditDiagnostic(Contract):
 
 class ExtractionConfig(Contract):
     schema_version: Literal["1"] = "1"
-    extractor_version: NonBlank = "phase1-v1"
+    extractor_version: NonBlank = "phase1-v2"
     sort: Literal[False] = False
     text_flags: NonnegativeInt = 195  # PyMuPDF 1.28.2 TEXTFLAGS_TEXT.
 

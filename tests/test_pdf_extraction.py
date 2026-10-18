@@ -114,3 +114,16 @@ def test_multi_column_preserves_original_order(pdf_factory, metadata_factory):
     page = extract_pages(path, manifest.documents[0], ExtractionConfig())[0]
     assert page.text.index("2021") < page.text.index("2022")
     assert len(page.text_blocks) == 2
+
+
+def test_image_without_text_is_an_explicit_coverage_gap(pdf_factory, metadata_factory):
+    path = pdf_factory(texts=[""])
+    with pymupdf.open(path) as pdf:
+        pixmap = pymupdf.Pixmap(pymupdf.csRGB, pymupdf.IRect(0, 0, 20, 20), False)
+        pixmap.clear_with(0)
+        pdf[0].insert_image(pymupdf.Rect(20, 20, 100, 100), pixmap=pixmap)
+        pdf.saveIncr()
+    document = build_manifest(metadata_factory(), path.parent, ("AMD",), "v1").documents[0]
+    page = extract_pages(path, document, ExtractionConfig())[0]
+    assert page.extraction_status == "empty" and page.text == ""
+    assert "image_content_without_text" in page.table_diagnostics

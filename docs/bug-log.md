@@ -68,3 +68,25 @@
   ignored root `.pytest-tmp` path, whose parent exists on a fresh checkout.
 - No runtime code, Python/package pins, source documents or tests were changed.
 - Verification: local full gates and the new remote run are recorded in the journal.
+
+## ENV-003 - Windows preview encoding resembled damaged extraction
+
+- Phase 1 source QA printed nonbreaking spaces/dashes as replacement glyphs in
+  terminal output. Hypothesis: the parser might be emitting U+FFFD.
+- Direct cached-text codepoint inspection over all 9,504 pages found **zero U+FFFD**;
+  NBSP, em/en dashes, and curly punctuation remain intact in UTF-8 cache data.
+- Root cause: preview/stdout decoding, not PDF content corruption. Use process-local
+  `PYTHONIOENCODING=utf-8` for Unicode previews; no parser/text normalization change.
+
+## BUG-004 - Text-empty pages hid image-only coverage gaps
+
+- Visual source QA found nine scanned Amcor appendix pages among 18 text-empty
+  pages. Empty status was explicit, but did not distinguish a blank page from
+  image content with no text layer.
+- RED: `test_image_without_text_is_an_explicit_coverage_gap` failed because only
+  `empty_page` was recorded.
+- Fix: append `image_content_without_text` when an empty page contains images;
+  keep raw text and page identity unchanged. Bump extractor version to `phase1-v2`
+  so cached v1 records do not conceal the new diagnostic.
+- Focused GREEN: the same regression test passed. Full-corpus regeneration and
+  final regression counts are recorded in P1-004; OCR remains outside scope.

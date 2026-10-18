@@ -6,7 +6,7 @@
 
 **Architecture:** Keep the modular Python monolith. `ingestion` consumes approved PDF provenance and PDF bytes; `evaluation` owns benchmark questions, annotations, split construction, and offline diagnostics. Shared runtime contracts depend only on Pydantic and the standard library.
 
-**Tech stack:** Python 3.12.15, uv 0.12.23, existing pinned Pydantic v2/pytest/Ruff, and proposed PyMuPDF 1.28.2 subject to the licensing decision below. No embedding, vector-store, model-provider, OCR, or UI dependency in Phase 1.
+**Tech stack:** Python 3.12.15, uv 0.12.23, existing pinned Pydantic v2/pytest/Ruff, and approved PyMuPDF 1.28.2. No embedding, vector-store, model-provider, OCR, or UI dependency in Phase 1.
 
 **Spec:** [project.md](../../../project.md), [Phase 0 audit](../../phase-0-audit.md), and the human's split requirements recorded in [P1-002](../../engineering-journal/phase-01.md#p1-002---company-stratified-split-decision).
 
@@ -39,7 +39,7 @@
 
 ## Observed baseline and proposed split
 
-These counts come from read-only audits. The development/holdout allocation was checked in memory; no split files have been written.
+These counts were established during read-only planning. The approved allocation is now persisted in `configs/evaluation/`; execution evidence is in P1-004.
 
 | Company | Canonical filings | Questions | Development | Holdout |
 |---|---:|---:|---:|---:|
@@ -88,14 +88,14 @@ The report must state: **The same filings may appear in both splits. This evalua
 - `ExtractionConfig`: schema/extractor version, original-order extraction, and explicit text flags; its canonical JSON produces the config fingerprint used by Task 2.
 - The manifest builder is an offline preparation boundary. Runtime page extraction accepts a validated manifest and never reads benchmark question JSON.
 
-- [ ] Resolve the parser licensing decision before dependency installation. If approved, pin **PyMuPDF 1.28.2**, regenerate the lockfile, and verify a locked isolated installation; otherwise revise and approve the parser-specific parts of Tasks 1 and 2 before coding.
-- [ ] Write failing synthetic tests for exact metadata joins, nullable metadata, duplicate/conflicting records, alias handling, stable IDs/hashes, portable paths, and unreadable/encrypted PDFs.
-- [ ] Run `uv run --locked pytest tests/test_manifest.py tests/test_ingestion_contracts.py --basetemp=.pytest-tmp`; confirm failures arise from missing behavior.
-- [ ] Implement the smallest manifest loader. Match metadata `doc_name` to PDF stems, verify PDF SHA/page count, and map actual fields (`doc_period`, `doc_type`, `doc_link`) explicitly. Reject selected ambiguous/missing joins; report the outside-scope conflict.
-- [ ] Resolve candidate paths under the configured root and reject traversal/escaping links. Store relative POSIX paths. Derive `document_id` as `doc_` plus SHA-256 of canonical JSON `[doc_name, pdf_sha256]`; source fingerprint hashes sorted `[doc_name, pdf_sha256]` pairs for the 53 canonical documents.
-- [ ] Treat the two unmatched Amcor PDFs as excluded aliases only after hash equality to a unique metadata-matched filing. Do not silently collapse distinct canonical metadata records by hash.
-- [ ] Verify schema generation/round trips and reject incorrect supplied fingerprints, duplicate IDs/names, invalid hashes/counts, and escaping paths. Run focused tests and the existing contract suite.
-- [ ] Record results in the journal and make an explicit-allowlist local commit after all applicable pre-commit checks pass.
+- [x] Resolve the parser licensing decision before dependency installation. If approved, pin **PyMuPDF 1.28.2**, regenerate the lockfile, and verify a locked isolated installation; otherwise revise and approve the parser-specific parts of Tasks 1 and 2 before coding.
+- [x] Write failing synthetic tests for exact metadata joins, nullable metadata, duplicate/conflicting records, alias handling, stable IDs/hashes, portable paths, and unreadable/encrypted PDFs.
+- [x] Run `uv run --locked pytest tests/test_manifest.py tests/test_ingestion_contracts.py --basetemp=.pytest-tmp`; confirm failures arise from missing behavior.
+- [x] Implement the smallest manifest loader. Match metadata `doc_name` to PDF stems, verify PDF SHA/page count, and map actual fields (`doc_period`, `doc_type`, `doc_link`) explicitly. Reject selected ambiguous/missing joins; report the outside-scope conflict.
+- [x] Resolve candidate paths under the configured root and reject traversal/escaping links. Store relative POSIX paths. Derive `document_id` as `doc_` plus SHA-256 of canonical JSON `[doc_name, pdf_sha256]`; source fingerprint hashes sorted `[doc_name, pdf_sha256]` pairs for the 53 canonical documents.
+- [x] Treat the two unmatched Amcor PDFs as excluded aliases only after hash equality to a unique metadata-matched filing. Do not silently collapse distinct canonical metadata records by hash.
+- [x] Verify schema generation/round trips and reject incorrect supplied fingerprints, duplicate IDs/names, invalid hashes/counts, and escaping paths. Run focused tests and the existing contract suite.
+- [x] Record results in the journal and make an explicit-allowlist local commit after all applicable pre-commit checks pass.
 
 ## Task 2: Page extraction, layout provenance, and cache
 
@@ -112,14 +112,14 @@ The report must state: **The same filings may appear in both splits. This evalua
 - `TextBlock`: original block index, finite ordered bounding box, exact block text, and a `SourceSpan` into the unchanged `Page.text`. Validate page identity, offsets, and exact substring agreement on the containing `Page`.
 - `finsight-ingest manifest` builds the Task 1 manifest; `finsight-ingest extract` accepts only manifest/PDF/config/cache inputs, never benchmark questions or annotations.
 
-- [ ] Verify the Task 1 parser installation and record its exact PyMuPDF/MuPDF backend versions before defining cache keys.
-- [ ] Write failing tests using small generated financial PDFs: page zero, blank pages, multiple years, units, parentheses/minus signs, Unicode supported by the fixture font, multi-column text, and ordered source offsets.
-- [ ] Run `uv run --locked pytest tests/test_pdf_extraction.py tests/test_page_cache.py --basetemp=.pytest-tmp`; verify the expected failures.
-- [ ] Extract original-order text with explicit `TEXTFLAGS_TEXT`, `sort=False`; obtain text blocks using the same configuration. Preserve raw page text without whitespace, sign, or numeric normalization. Store only text blocks whose offsets can be proven against raw text; retain raw text and report layout-mapping failure rather than fabricating spans.
-- [ ] Preserve `ok`, `empty`, and `error` page outcomes and page indices. Fail the command on unreadable/encrypted sources, source hash/page-count changes, or extraction errors; do not silently drop pages. Blank pages receive explicit diagnostics.
-- [ ] Cache validated per-document pages under ignored `data/cache/pages/`, keyed by PDF SHA, extraction config, PyMuPDF/MuPDF versions, and cache schema. Validate identity, page completeness/order, and payload integrity before reuse; rebuild corrupt/stale caches from the verified PDF. Write via same-directory temporary file and atomic replacement.
-- [ ] Test cache hits without parser calls, each invalidation input, truncated/wrong-document cache data, interrupted writes, and block/source mismatches. Test that annotation changes cannot affect extraction/cache output.
-- [ ] Run focused tests, unchanged Phase 0 tests, schema checks, and synthetic CLI smoke. Record actual outcomes and commit only this verified scope.
+- [x] Verify the Task 1 parser installation and record its exact PyMuPDF/MuPDF backend versions before defining cache keys.
+- [x] Write failing tests using small generated financial PDFs: page zero, blank pages, multiple years, units, parentheses/minus signs, Unicode supported by the fixture font, multi-column text, and ordered source offsets.
+- [x] Run `uv run --locked pytest tests/test_pdf_extraction.py tests/test_page_cache.py --basetemp=.pytest-tmp`; verify the expected failures.
+- [x] Extract original-order text with explicit `TEXTFLAGS_TEXT`, `sort=False`; obtain text blocks using the same configuration. Preserve raw page text without whitespace, sign, or numeric normalization. Store only text blocks whose offsets can be proven against raw text; retain raw text and report layout-mapping failure rather than fabricating spans.
+- [x] Preserve `ok`, `empty`, and `error` page outcomes and page indices. Fail the command on unreadable/encrypted sources, source hash/page-count changes, or extraction errors; do not silently drop pages. Blank pages receive explicit diagnostics.
+- [x] Cache validated per-document pages under ignored `data/cache/pages/`, keyed by PDF SHA, extraction config, PyMuPDF/MuPDF versions, and cache schema. Validate identity, page completeness/order, and payload integrity before reuse; rebuild corrupt/stale caches from the verified PDF. Write via same-directory temporary file and atomic replacement.
+- [x] Test cache hits without parser calls, each invalidation input, truncated/wrong-document cache data, interrupted writes, and block/source mismatches. Test that annotation changes cannot affect extraction/cache output.
+- [x] Run focused tests, unchanged Phase 0 tests, schema checks, and synthetic CLI smoke. Record actual outcomes and commit only this verified scope.
 
 ## Task 3: Evaluation-only benchmark preparation and frozen IDs
 
@@ -135,13 +135,13 @@ The report must state: **The same filings may appear in both splits. This evalua
 - `freeze_splits(cases: tuple[BenchmarkCase, ...], policy: SplitPolicy, dataset_sha256: str, source_fingerprint: str) -> tuple[SplitManifest, SplitManifest]` produces development then holdout.
 - `finsight-benchmark-audit split` creates the ID manifests; `finsight-benchmark-audit validate` checks joins/references and reports aggregates. Annotation-guided extraction diagnostics require `--split development`.
 
-- [ ] Write failing tests for string IDs, nullable fields, mixed reasoning labels, actual evidence `doc_name`/zero-based `evidence_page_num`, duplicate IDs, and missing filings.
-- [ ] Write split tests asserting **36/16**, the exact six-company table, disjoint/exhaustive IDs, all seven repeated reasoning categories in both splits, optimal feasible company/reasoning coverage, and input-order independence. Use synthetic data with the audited count/label pattern, not copied gold content.
-- [ ] Run the focused tests and verify expected failures; implement the policy above with deterministic canonical fingerprints and overwrite protection.
-- [ ] Add subprocess/import tests proving that contracts, ingestion, application, and smoke do not import evaluation. Runtime models and ingestion commands reject gold-answer/justification/annotated-evidence inputs. Altering synthetic annotations must not alter PDF-derived pages, blocks, or source fingerprints.
-- [ ] Keep full gold cases and detailed annotation diagnostics only in ignored `data/evaluation/`. Public manifests contain membership and reproducibility metadata only. Do not print holdout answers, evidence, or per-case extraction feedback for tuning.
-- [ ] Verify the real 52-ID split and structural reference checks locally after implementation. Freeze IDs before annotation-guided extraction review, which uses development cases only. Run no holdout answer/retrieval evaluation.
-- [ ] Record the selected policy separately from pending overall implementation review; commit the verified evaluator preparation and ID manifests.
+- [x] Write failing tests for string IDs, nullable fields, mixed reasoning labels, actual evidence `doc_name`/zero-based `evidence_page_num`, duplicate IDs, and missing filings.
+- [x] Write split tests asserting **36/16**, the exact six-company table, disjoint/exhaustive IDs, all seven repeated reasoning categories in both splits, optimal feasible company/reasoning coverage, and input-order independence. Use synthetic data with the audited count/label pattern, not copied gold content.
+- [x] Run the focused tests and verify expected failures; implement the policy above with deterministic canonical fingerprints and overwrite protection.
+- [x] Add subprocess/import tests proving that contracts, ingestion, application, and smoke do not import evaluation. Runtime models and ingestion commands reject gold-answer/justification/annotated-evidence inputs. Altering synthetic annotations must not alter PDF-derived pages, blocks, or source fingerprints.
+- [x] Keep full gold cases and detailed annotation diagnostics only in ignored `data/evaluation/`. Public manifests contain membership and reproducibility metadata only. Do not print holdout answers, evidence, or per-case extraction feedback for tuning.
+- [x] Verify the real 52-ID split and structural reference checks locally after implementation. Freeze IDs before annotation-guided extraction review, which uses development cases only. Run no holdout answer/retrieval evaluation.
+- [x] Record the selected policy separately from pending overall implementation review; commit the verified evaluator preparation and ID manifests.
 
 ## Task 4: Real-corpus acceptance, documentation, and checkpoint
 
@@ -151,15 +151,15 @@ The report must state: **The same filings may appear in both splits. This evalua
 - Update `README.md`, `docs/experiments.md`, `docs/engineering-journal/phase-01.md`, `docs/prompt-registry.csv`, and `docs/bug-log.md` when actual defects occur.
 - Update CI only where required for new synthetic checks; retain pinned actions, Python 3.12.15, and Windows/Ubuntu coverage.
 
-- [ ] Add integration assertions for 53 canonical filings, 9,504 ordered page records, 52 questions, 19 question-linked filings, complete split membership, and valid zero-based evidence references. Run these only when local source paths are explicitly supplied.
-- [ ] Compare original JSONL and all 55 selected PDF hashes before and after ingestion. Label the original 55-file audit fingerprint separately from the new 53-file corpus fingerprint.
-- [ ] Review at least one development evidence page and one financial-table example per company. Verify years, row labels, units, negatives, headings, and PDF-page provenance against the original page. Record each observed mismatch and parser limitation; avoid claiming complete table reconstruction from a spot check.
-- [ ] Report per-company/filing-type/year counts, extraction successes/empty/error pages, layout/cache diagnostics, aliases/conflicts, split distributions, and previous/new diagnostic differences in `docs/data_audit.md`. A quote normalization match is not faithfulness or benchmark accuracy.
-- [ ] Document the holdout protocol: tune only on the 36 development IDs; freeze model/prompt/retrieval/chunking/reranking/context/corpus/index revisions before one final A/B/C/D holdout campaign on the same 16 IDs. Preserve identical pre-rank pools within paired rerank arms. Implement the runner only in its later phase.
-- [ ] Reconcile the existing Phase 0 journal/CI evidence with the successful published run, without pulling unrelated code or inventing PR authorization. The merged base contains the code/CI fix; one later Phase 0 evidence-only commit was not part of the merge.
-- [ ] Run the commands below; inspect all results, staged contents, secret patterns, ignored artifacts, and large files. Record exact failures/corrections and final outcomes before each commit. Source PDFs, annotations, caches, and private environment files must stay untracked.
-- [ ] Repeat locked installation and the synthetic smoke from a fresh temporary project environment; record interpreter/parser versions and wheel-build results. Keep its environment/cache outside committed artifacts.
-- [ ] Return the eight-part checkpoint required by `project.md`, with actual commit SHA, journal links, test counts, fingerprints, limitations, and next recommendation. Stop for human review; do not push or start Phase 2.
+- [x] Add integration assertions for 53 canonical filings, 9,504 ordered page records, 52 questions, 19 question-linked filings, complete split membership, and valid zero-based evidence references. Run these only when local source paths are explicitly supplied.
+- [x] Compare original JSONL and all 55 selected PDF hashes before and after ingestion. Label the original 55-file audit fingerprint separately from the new 53-file corpus fingerprint.
+- [x] Review at least one development evidence page and one financial-table example per company. Verify years, row labels, units, negatives, headings, and PDF-page provenance against the original page. Record each observed mismatch and parser limitation; avoid claiming complete table reconstruction from a spot check.
+- [x] Report per-company/filing-type/year counts, extraction successes/empty/error pages, layout/cache diagnostics, aliases/conflicts, split distributions, and previous/new diagnostic differences in `docs/data_audit.md`. A quote normalization match is not faithfulness or benchmark accuracy.
+- [x] Document the holdout protocol: tune only on the 36 development IDs; freeze model/prompt/retrieval/chunking/reranking/context/corpus/index revisions before one final A/B/C/D holdout campaign on the same 16 IDs. Preserve identical pre-rank pools within paired rerank arms. Implement the runner only in its later phase.
+- [x] Reconcile the existing Phase 0 journal/CI evidence with the successful published run, without pulling unrelated code or inventing PR authorization. The merged base contains the code/CI fix; one later Phase 0 evidence-only commit was not part of the merge.
+- [x] Run the commands below; inspect all results, staged contents, secret patterns, ignored artifacts, and large files. Record exact failures/corrections and final outcomes before each commit. Source PDFs, annotations, caches, and private environment files must stay untracked.
+- [x] Repeat locked installation and the synthetic smoke from a fresh temporary project environment; record interpreter/parser versions and wheel-build results. Keep its environment/cache outside committed artifacts.
+- [x] Return the eight-part checkpoint required by `project.md`, with actual commit SHA, journal links, test counts, fingerprints, limitations, and next recommendation. Stop for human review; do not push or start Phase 2.
 
 ## Verification commands
 
@@ -187,7 +187,7 @@ uv run --locked pytest -m integration tests/test_corpus_integration.py --basetem
 
 The integration test reads `FINSIGHT_SOURCE_PDF_DIR=source-data/pdfs` and `FINSIGHT_BENCHMARK_DIR=source-data/data`; it must explicitly skip with a reason when local inputs are absent. Standard CI runs synthetic tests only. CI for Phase 1 is unexecuted until an approved push actually triggers it.
 
-The earlier Phase 0 checkpoint had 65 passing tests. Phase 1 tests, fresh parser installation, full-corpus extraction, cache verification, and the eventual Phase 1 CI run are **not yet executed**. Read-only dependency resolution and twelve page/block probes are preliminary evidence only.
+The earlier Phase 0 checkpoint had 65 passing tests. Local Phase 1 verification reached 133 passing unit tests (one explicit Windows symlink skip; four integration checks deselected), four passing real-corpus checks, fresh installation/isolated wheel smoke, and full-corpus extraction/cache verification. Extractor `phase1-v2` explicitly flags nine scanned appendix pages as text-coverage gaps without OCR. Phase 1 remote CI is **not executed** until an approved push. Final independent review is the next gate; its findings and corrections will be recorded in the journal.
 
 ## Decisions, risks, and approval boundary
 
@@ -197,6 +197,6 @@ The earlier Phase 0 checkpoint had 65 passing tests. Phase 1 tests, fresh parser
 4. **Small benchmark:** 52 questions and shared filings limit conclusions. Report missing/singleton reasoning labels and unseen-question scope. Never choose a seed by answer/retrieval performance.
 5. **Preliminary documentation evidence:** ContextHub `pymupdf/package` material consulted during planning covered 1.27.2; official documentation covering 1.28.2 was checked for extraction behavior. Record both versions rather than calling the older guide current for every API.
 6. **GitHub:** a local Phase 1 branch exists. The previous PR connector returned 403; public read access and git push worked for Phase 0, and the human merged PR #1. Reverify publication permissions only after Phase 1 push approval.
-7. **Time box:** target 2-2.5 hours for approved implementation/verification, subject to licensing resolution and corpus extraction findings. This is an estimate, not a passed quality gate or deadline guarantee.
+7. **Time box:** target 2-2.5 hours for approved implementation/verification, subject to corpus extraction findings. This is an estimate, not a passed quality gate or deadline guarantee.
 
-**Requested review:** Confirm the plan captures Phase 1 and resolve the parser choice. Recommended execution is native task-by-task work in this branch with a final review under the applicable Superpowers workflow. Implementation, Phase 1 publication, and later phases remain separate approval boundaries.
+**Approval and checkpoint:** The human approved this plan and PyMuPDF in P1-004. Native task-by-task local implementation proceeds through a final independent review. Phase 1 publication and later phases remain separate approval boundaries.

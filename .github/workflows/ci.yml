@@ -1,4 +1,4 @@
-name: Foundation checks
+name: Project checks
 
 on: [push, pull_request]
 
@@ -35,5 +35,9 @@ jobs:
         run: uv run --locked pytest --basetemp "${{ runner.temp }}/finsight-pytest"
       - name: Synthetic smoke
         run: uv run --locked finsight-smoke
+      - name: Ingestion command installation
+        run: uv run --locked finsight-ingest --help
+      - name: Offline benchmark command installation
+        run: uv run --locked finsight-benchmark-audit --help
       - name: Package build
         run: uv build

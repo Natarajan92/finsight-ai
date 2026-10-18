@@ -73,6 +73,8 @@ def extract_pages(
                 )
                 continue
             diagnostics = [] if text.strip() else ["empty_page"]
+            if not text.strip() and page.get_images():
+                diagnostics.append("image_content_without_text")
             try:
                 blocks = _blocks(page, text, config)
             except (RuntimeError, ValueError):
