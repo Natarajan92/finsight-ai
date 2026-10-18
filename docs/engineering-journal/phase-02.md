@@ -623,3 +623,14 @@ from resolution alone. No provider credits have been consumed in this planning.
   No push occurred. Preparing the local documentation commit separately is
   unaffected; explicit approval of that exact destination is required before
   retrying publication. No alternate execution path or force push was attempted.
+- **Destination approval and publication:** after the assistant explicitly asked
+  to push `feat/phase-2-baseline-rag` to `Natarajan92/finsight-ai`, the human
+  replied **"approved"**. A normal `git push -u origin feat/phase-2-baseline-rag`
+  then succeeded, creating that remote branch. `git ls-remote origin
+  refs/heads/feat/phase-2-baseline-rag` verified commit
+  `dc07e66dafb456d1a26bb3a7db74b9a3c3c9be44` matches local HEAD. The initial
+  inline notebook recheck had a PowerShell quoting error; a subsequent literal
+  Python script verified the exact published commit's notebook has empty outputs
+  and null execution counts. The local executed notebook remains uncommitted and
+  untouched. This documentation-only follow-up records the successful publication;
+  no PR, merge, paid provider request or full-corpus acceptance was performed.
