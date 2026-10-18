@@ -105,3 +105,24 @@ def test_round_up_and_invalid_state_or_identity_rejected(ledger):
         ledger_type().open(ledger.path, "different")
     with pytest.raises((ValueError, FinsightError)):
         reserve(ledger, "bad", "NaN")
+
+
+def test_busy_storage_is_distinct_from_corrupt_storage(ledger, monkeypatch):
+    import sqlite3
+
+    original = sqlite3.connect
+    holder = original(ledger.path, isolation_level=None)
+    holder.execute("BEGIN IMMEDIATE")
+
+    def short_wait(*args, **kwargs):
+        kwargs["timeout"] = 0.01
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(sqlite3, "connect", short_wait)
+    try:
+        with pytest.raises(FinsightError, match="budget_busy"):
+            reserve(ledger)
+    finally:
+        holder.rollback()
+        holder.close()
+    assert ledger.snapshot().reserved_usd == 0

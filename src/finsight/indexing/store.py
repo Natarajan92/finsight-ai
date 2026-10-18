@@ -5,7 +5,6 @@ import sys
 from array import array
 from contextlib import closing, contextmanager
 from hashlib import sha256
-from importlib.metadata import version
 from pathlib import Path
 
 import chromadb
@@ -13,10 +12,6 @@ from langchain_chroma import Chroma
 
 from finsight.contracts.documents import Chunk, DocumentManifest
 from finsight.runtime.errors import FinsightError
-
-
-def software_versions() -> dict[str, str]:
-    return {name: version(name) for name in ("chromadb", "langchain-chroma", "tokenizers")}
 
 
 def vector_hash(vector) -> str:

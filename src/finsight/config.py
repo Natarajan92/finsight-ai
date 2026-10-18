@@ -3,7 +3,7 @@
 from pathlib import Path
 from typing import Literal
 
-from pydantic import SecretStr
+from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -24,3 +24,4 @@ class Settings(BaseSettings):
     rates_path: Path = Path("data/cache/budget/rates.json")
     ledger_path: Path = Path("data/cache/budget/testing.sqlite3")
     trace_root: Path = Path("results/traces")
+    index_job_timeout_s: int = Field(default=14400, ge=60, le=14400)

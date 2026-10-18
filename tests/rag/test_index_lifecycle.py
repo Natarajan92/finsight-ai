@@ -203,3 +203,16 @@ def test_failed_reopen_releases_its_client(index_setup, monkeypatch):
     with pytest.raises(FinsightError, match="index_integrity"):
         reopen(index_setup)
     assert created[0].client._closed
+
+
+def test_non_axis_vectors_keep_integrity_after_hnsw_buffer_flush(index_setup, monkeypatch):
+    setup = list(index_setup)
+    setup[3] = setup[3].model_copy(update={"chunk_tokens": 10, "overlap_tokens": 1})
+    monkeypatch.setattr(setup[4], "embed_documents", lambda texts: [[3.0, 4.0, 1.0] for _ in texts])
+    manifest = build(setup)
+    assert manifest.chunk_count > 100
+    retriever = reopen(setup)
+    try:
+        assert retriever.manifest == manifest
+    finally:
+        retriever.store.client.close()

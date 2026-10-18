@@ -39,6 +39,7 @@ class RunTrace(Contract):
     prompt: GroundedPrompt | None = None
     draft: DraftAnswer | None = None
     counting: tuple[dict[str, object], ...] = ()
+    software: dict[str, str] = {}
     filters: dict[str, object] = {}
     retrieved: tuple[RetrievalCandidate, ...] = ()
     packed: tuple[dict[str, object], ...] = ()

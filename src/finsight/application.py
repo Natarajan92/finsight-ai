@@ -19,6 +19,7 @@ from finsight.generation.prompts import build_prompt
 from finsight.ingestion.manifest import company_key
 from finsight.runtime.errors import FinsightError
 from finsight.runtime.ports import CallContext
+from finsight.runtime.software import software_versions
 
 
 class ApplicationService(Protocol):
@@ -219,6 +220,7 @@ class BaselineApplicationService:
         rates = getattr(dispatcher, "rates", None)
         packet = state["packet"]
         trace = RunTrace(
+            software=software_versions(),
             run_id=run_id,
             budget_id=self.config.budget_id,
             config_fingerprint=self.config.fingerprint(),

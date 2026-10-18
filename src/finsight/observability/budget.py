@@ -97,6 +97,13 @@ class BudgetLedger:
                 raise FinsightError("budget_identity")
             yield connection
             connection.commit()
+        except sqlite3.OperationalError as error:
+            if getattr(error, "sqlite_errorcode", None) in {
+                sqlite3.SQLITE_BUSY,
+                sqlite3.SQLITE_LOCKED,
+            }:
+                raise FinsightError("budget_busy") from None
+            raise FinsightError("budget_integrity") from None
         except (sqlite3.Error, OSError, ValueError):
             raise FinsightError("budget_integrity") from None
         finally:

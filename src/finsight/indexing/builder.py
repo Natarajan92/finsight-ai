@@ -11,6 +11,7 @@ from finsight.ingestion.cache import write_json_atomic
 from finsight.retrieval.dense import DenseRetriever
 from finsight.runtime.errors import FinsightError
 from finsight.runtime.ports import CallContext, EmbeddingBackend, OffsetTokenizer, PageRepository
+from finsight.runtime.software import software_versions
 
 from .catalog import create_catalog, validate_catalog
 from .embedding_cache import normalize_vector
@@ -18,7 +19,6 @@ from .store import (
     LocalVectorStore,
     chunk_metadata,
     index_build_lock,
-    software_versions,
     vector_hash,
 )
 

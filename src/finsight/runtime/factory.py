@@ -202,7 +202,7 @@ def build_local_index(settings: Settings, config: BaselineConfig, *, allow_paid:
                 config,
                 backend,
                 root,
-                CallContext(identity, 2, started + 3600),
+                CallContext(identity, 2, started + settings.index_job_timeout_s),
                 tokenizer=tokenizer,
             )
         return manifest
@@ -219,6 +219,7 @@ def build_local_index(settings: Settings, config: BaselineConfig, *, allow_paid:
                 attempts=[a.model_dump(mode="json") for a in dispatcher.attempts],
                 budget=ledger.snapshot().model_dump(mode="json"),
                 latency_ms=(monotonic() - started) * 1000,
+                job_timeout_s=settings.index_job_timeout_s,
             ),
         )
 

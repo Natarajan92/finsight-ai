@@ -133,6 +133,9 @@ def test_answer_boundary_and_correlated_trace(application_setup):
     trace = recorder.records[0]
     assert trace.run_id == service.last_trace_id
     assert trace.answer == answer and trace.request == request
+    from importlib.metadata import version
+
+    assert trace.software["langchain-anthropic"] == version("langchain-anthropic")
     assert trace.retrieved == retriever.items
     assert trace.packet.slices[0].source_spans == retriever.items[0].chunk.source_spans
     assert RunTrace.model_validate_json(trace.model_dump_json()) == trace

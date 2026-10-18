@@ -29,7 +29,9 @@ def test_configuration_bounds_and_fingerprint():
     )
     changed = config_type()(prompt_version="grounded-v2")
     assert changed.fingerprint() != config.fingerprint()
-    assert config_type().model_validate_json(config.model_dump_json()) == config
+    restored = config_type().model_validate_json(config.model_dump_json())
+    assert restored == config
+    assert restored.fingerprint() == config.fingerprint()
 
 
 @pytest.mark.parametrize(
@@ -85,6 +87,15 @@ def test_checked_in_baseline_config_can_load():
         == "7376d03d8183077b92ed98b8c4e3a584fefd02202b75feba82cdc13b2519fad3"
     )
     assert "api_key" not in json.dumps(loaded.model_dump(mode="json"))
+
+
+def test_bulk_build_window_preserves_answer_and_attempt_deadlines():
+    settings = Settings(_env_file=None)
+    assert settings.index_job_timeout_s == 14400
+    assert config_type()().deadline_s == 45 and config_type()().attempt_timeout_s == 20
+    for timeout in [0, 14401]:
+        with pytest.raises(ValueError):
+            Settings(_env_file=None, index_job_timeout_s=timeout)
 
 
 def test_provider_constructors_are_keyless_and_local(tmp_path):
