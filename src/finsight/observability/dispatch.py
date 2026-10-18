@@ -1,6 +1,7 @@
 """Reserve before sending; retain uncertain billing; retries are physical attempts."""
 
 from collections.abc import Callable
+from decimal import Decimal
 from threading import Lock
 from typing import TypeVar
 
@@ -18,11 +19,17 @@ T = TypeVar("T")
 
 class GuardedDispatcher:
     def __init__(
-        self, ledger: BudgetLedger, rates: RateBook, *, config: BaselineConfig | None = None
+        self,
+        ledger: BudgetLedger,
+        rates: RateBook,
+        *,
+        config: BaselineConfig | None = None,
+        phase3_usd: Decimal = Decimal("0.75"),
     ):
         self.ledger = ledger
         self.rates = rates
         self.config = config or BaselineConfig()
+        self.phase3_usd = phase3_usd
         self._attempts: list[ProviderAttempt] = []
         self._lock = Lock()
 
@@ -64,6 +71,7 @@ class GuardedDispatcher:
                 context.phase,
                 working_usd=self.config.working_usd,
                 phase2_usd=self.config.phase2_usd,
+                phase3_usd=self.phase3_usd,
             )
             context.remaining()
             self.ledger.mark_dispatched(reservation.reservation_id)
