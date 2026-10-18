@@ -119,3 +119,70 @@ def embedding_setup(tmp_path, char_tokenizer, synthetic_rates):
     bound = backend.for_run(CallContext("run", 2, 100, clock=lambda: 0))
     yield bound, cache, dispatcher, calls, responses
     client.close()
+
+
+@pytest.fixture
+def index_setup(tmp_path, pdf_factory, metadata_factory, char_tokenizer):
+    import importlib
+
+    from finsight.contracts import BaselineConfig
+    from finsight.contracts.ingestion import ExtractionConfig
+    from finsight.ingestion.cache import extract_cached
+    from finsight.ingestion.manifest import build_manifest
+    from finsight.runtime.ports import CallContext
+
+    assert importlib.util.find_spec("finsight.indexing.builder"), "Missing index lifecycle"
+    module = importlib.import_module("finsight.indexing.builder")
+    repo_module = importlib.import_module("finsight.ingestion.pages")
+    first = pdf_factory("AMD_2022_10K", ["Revenue USD millions 2022\nRevenue 100\n" * 20])
+    pdf_factory("PepsiCo_2021_10K", ["Revenue USD millions 2021\nRevenue 200\n" * 20])
+    metadata = metadata_factory(
+        [
+            dict(
+                doc_name="AMD_2022_10K",
+                company="AMD",
+                doc_type="10K",
+                doc_period=2022,
+                doc_link=None,
+            ),
+            dict(
+                doc_name="PepsiCo_2021_10K",
+                company="PepsiCo",
+                doc_type="10K",
+                doc_period=2021,
+                doc_link=None,
+            ),
+        ]
+    )
+    import json
+
+    rows = [json.loads(line) for line in metadata.read_text().splitlines()]
+    metadata.write_text("".join(json.dumps(dict(row, gics_sector=None)) + "\n" for row in rows))
+    corpus = build_manifest(metadata, first.parent, ("AMD", "PepsiCo"), "phase1-v3")
+    for doc in corpus.documents:
+        extract_cached(first.parent, doc, ExtractionConfig(), tmp_path / "pages")
+    repo = repo_module.CachedPageRepository(corpus, first.parent, tmp_path / "pages")
+    config = BaselineConfig(source_fingerprint=corpus.source_fingerprint, embedding_dimension=3)
+
+    class FakeEmbeddings:
+        calls = 0
+        queries = 0
+        fail_after = None
+
+        def for_run(self, context):
+            return self
+
+        def embed_documents(self, texts):
+            self.calls += 1
+            if self.fail_after is not None and self.calls > self.fail_after:
+                raise RuntimeError("synthetic interruption")
+            return [[1.0, 0.0, 0.0] for _ in texts]
+
+        def embed_query(self, text):
+            self.queries += 1
+            return [1.0, 0.0, 0.0]
+
+    embeddings = FakeEmbeddings()
+    context = CallContext("index-run", 2, 1e20)
+    root = tmp_path / "index"
+    return module, corpus, repo, config, embeddings, root, context, char_tokenizer

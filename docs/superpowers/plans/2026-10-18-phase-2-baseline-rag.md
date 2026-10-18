@@ -207,7 +207,7 @@ Assert request body/endpoint/tier/prefix, indices reordered correctly, no automa
 
 Use validated source PDFs/cache records and manifest metadata, stable insertion order, single-threaded HNSW construction and explicit cosine configuration. The published Chroma wrapper accepts `collection_configuration={'hnsw': {'space': 'cosine'}}`; inspect/verify further HNSW options against pinned APIs before setting them. All embedding calls go through the guarded cached adapter. Disable default embedding downloads and telemetry. Query by an already obtained query vector; verify the chosen wrapper method returns raw distance, and label it `cosine_distance/lower_is_better`. Preserve returned pre-rank pool; sort equal distances by stable chunk ID. Persist the exact observed pool for later paired-arm reuse.
 
-- [ ] **Step 1 - Write failing synthetic PDF/index/retrieval tests**, including:
+- [x] **Step 1 - Write failing synthetic PDF/index/retrieval tests**, including:
 
 ```python
 assert len(results) <= 15
@@ -219,10 +219,10 @@ assert all(
 ```
 
 Test combined company/document/period filters, unknown/conflicting filters, unfiltered corpus scope, equal-score ties, catalog/manifest/source mismatch, a forged document ID, stale vector dimension, incomplete build, interrupted/resumed build and `test_second_complete_build_makes_zero_embedding_calls`. Reject altered stored text or filter metadata against the catalog. Missing/replaced original PDFs or altered page caches must fail before generation.
-- [ ] **Step 2 - Run RED:** `uv run --locked pytest tests/rag/test_index_lifecycle.py tests/rag/test_dense_retrieval.py --basetemp=.pytest-tmp/p2 -q`.
-- [ ] **Step 3 - Implement staged index/catalog lifecycle and retrieval.** Publish a completion manifest atomically only after validating expected IDs/count, text/metadata joins and dimensions. Resume an incomplete compatible build; never expose it to queries or overwrite a different complete fingerprint. Reopen validation checks completion/catalog integrity. Confirm candidate content/provenance against the catalog and selected original sources before generation.
-- [ ] **Step 4 - Run GREEN:** the same tests on local temporary Chroma, with socket blocking and default embeddings disabled. Re-run existing source/cache/isolation tests. Approximate search repeatability is measured, not inferred solely from a seed; persisted candidate pools provide exact replay.
-- [ ] **Step 5 - Common gate and commit:** `feat: persist and query provenance-validated baseline indexes`.
+- [x] **Step 2 - Run RED:** `uv run --locked pytest tests/rag/test_index_lifecycle.py tests/rag/test_dense_retrieval.py --basetemp=.pytest-tmp/p2 -q`.
+- [x] **Step 3 - Implement staged index/catalog lifecycle and retrieval.** Publish a completion manifest atomically only after validating expected IDs/count, text/metadata joins and dimensions. Resume an incomplete compatible build; never expose it to queries or overwrite a different complete fingerprint. Reopen validation checks completion/catalog integrity. Confirm candidate content/provenance against the catalog and selected original sources before generation.
+- [x] **Step 4 - Run GREEN:** the same tests on local temporary Chroma, with socket blocking and default embeddings disabled. Re-run existing source/cache/isolation tests. Approximate search repeatability is measured, not inferred solely from a seed; persisted candidate pools provide exact replay.
+- [x] **Step 5 - Common gate and commit:** `feat: persist and query provenance-validated baseline indexes`.
 
 ## Task 6: Claude-aware token counting and bounded source packing
 
