@@ -40,3 +40,21 @@
   Ruff lint/format passed for 137 files using `--no-respect-gitignore` because the
   clean snapshot is inside ignored scratch storage. The initial snapshot lint had
   found no files; it was rerun correctly. No runtime isolation assertion was relaxed.
+
+### Task 2 — Source-aligned semantic preparation
+
+- RED cases covered missing semantic chunking, source/cache/config changes, a
+  semantic index silently accepting the fixed chunker and missing manual batch
+  execution. Implemented document-role Nebius cache references, same-page distances,
+  document percentile, explicit semantic/forced/page-end decisions, source-aligned
+  Unicode windows and cache-only reconstruction. A changed vector invalidates
+  prepared decisions. No provider client exists in chunk reconstruction.
+- Catalog/build/open gain optional pure chunker injection; all legacy defaults and
+  baseline fingerprints remain. Semantic catalogs require the prepared strategy
+  and validate returned strategy/configuration identities before publication.
+- Focused semantic/index lifecycle run: 23 passed; manual-batch and timeout cases
+  additionally verify one guarded request and preserved Phase 3 unknown reservation.
+- Eight semantic cases pass, including manual batch/timeout RED→GREEN regressions.
+  Full staged suite: **329 passed, one host symlink skip, seven integration
+  deselected**, 68.27s; Ruff lint/format passed for 140 files. Original notebook
+  hash and staged outgoing checks passed; provider calls in verification were zero.
