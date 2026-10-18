@@ -64,6 +64,83 @@ def metadata_factory(tmp_path):
     return create
 
 
+@pytest.fixture
+def benchmark_fixture(pdf_factory, metadata_factory, tmp_path):
+    """Synthetic questions/gold; only public reasoning-count patterns are reproduced."""
+    from finsight.ingestion.manifest import build_manifest
+
+    patterns = {
+        "AMD": {"numeric": 2, "logical_or_logical": 1, "extract": 2, "combined": 1, None: 2},
+        "American Express": {
+            "extract": 2,
+            "numeric_or_extract": 1,
+            "combined": 1,
+            "numeric": 1,
+            None: 2,
+        },
+        "PepsiCo": {"extract": 4, "numeric": 2, None: 5},
+        "Boeing": {
+            "extract": 2,
+            "logical": 1,
+            "numeric_or_extract": 1,
+            "extract_or_logical": 1,
+            None: 3,
+        },
+        "Amcor": {
+            "extract": 2,
+            None: 4,
+            "numeric_or_logical": 1,
+            "malformed_or": 1,
+            "numeric_or_extract": 1,
+        },
+        "Johnson & Johnson": {"logical": 1, "combined": 1, "numeric_or_logical": 1, None: 6},
+    }
+    metadata, cases = [], []
+    root = None
+    for index, (company, labels) in enumerate(patterns.items()):
+        path = pdf_factory(name=f"SYNTHETIC_{index}")
+        root = path.parent
+        metadata.append(
+            {
+                "doc_name": path.stem,
+                "company": company,
+                "gics_sector": None,
+                "doc_type": "AnnualReport",
+                "doc_period": 2022,
+                "doc_link": None,
+            }
+        )
+        for label, count in labels.items():
+            for _ in range(count):
+                identity = f"synthetic-{len(cases):03d}"
+                cases.append(
+                    {
+                        "financebench_id": identity,
+                        "company": company,
+                        "doc_name": path.stem,
+                        "question_type": "synthetic",
+                        "question_reasoning": label,
+                        "domain_question_num": None,
+                        "question": f"Synthetic question {identity}?",
+                        "answer": f"GOLD_ONLY_{identity}",
+                        "justification": None,
+                        "dataset_subset_label": "synthetic",
+                        "evidence": [
+                            {
+                                "doc_name": path.stem,
+                                "evidence_page_num": 0,
+                                "evidence_text": "Revenue 1,000",
+                                "evidence_text_full_page": "GOLD_PAGE_ONLY",
+                            }
+                        ],
+                    }
+                )
+    corpus = build_manifest(metadata_factory(metadata), root, tuple(patterns), "v1")
+    questions = tmp_path / "questions.jsonl"
+    questions.write_text("".join(json.dumps(case) + "\n" for case in cases), encoding="utf-8")
+    return questions, corpus, cases
+
+
 @pytest.fixture(autouse=True)
 def block_network(request, monkeypatch):
     if request.node.get_closest_marker("integration"):

@@ -136,3 +136,15 @@ performed for this documentation request.
 - Focused initial GREEN: 23 tests passed. Final `uv run --locked pytest -m "not integration" --basetemp=.pytest-tmp -q`: **108 passed, 1 skipped in 3.12s**. Ruff formatting/lint passed.
 - `uv run --locked finsight-ingest manifest --metadata source-data/data/financebench_document_information.jsonl --pdf-root source-data/pdfs --output data/manifests/financebench-selected.json`: **53 documents**, expected aliases/conflict, unchanged 53-source fingerprint. This generated provenance artifact contains no benchmark questions or labels.
 - No claim of full-corpus extraction or real table QA yet; those checks follow frozen-ID preparation.
+
+### Task 3 - Offline benchmark preparation and frozen IDs
+
+- Task 2 local commit: `ce330c1`; 12 staged files passed limited secret/artifact/size/ignore and whitespace checks. Lock, formatting, synthetic smoke, and focused task-done check passed (24 tests).
+- Full source-only extraction command completed: **53 filings, 9,504 pages, 9,486 nonempty, 18 empty, 0 parser errors, 0 block-mapping failures**. This does not certify financial table semantics.
+- RED: benchmark loader/split tests failed with two missing-module errors; audit tests separately failed on the missing audit module. GREEN focused suites: 21 tests and 3 tests respectively.
+- Implemented actual-schema evaluation-private models, exact question/document/page joins, constrained seeded allocation, ID-only manifests, shared fingerprints, idempotent writes, and refusal to replace a different frozen pair.
+- Runtime subprocess/import checks confirm no evaluation imports; source cache output is independent of changed synthetic gold annotations. Runtime request/page/CLI and metadata-loader tests reject annotation inputs.
+- `uv run --locked pytest -m "not integration" --basetemp=.pytest-tmp -q`: **132 passed, 1 explicit Windows symlink skip in 6.99s**. Ruff lint/format checks passed after correcting one long diagnostic string.
+- Real `finsight-benchmark-audit split` command: **36 development / 16 holdout**, all six companies represented. Shared split fingerprint: `e6ec481633654b779721f1d94c7aa05a65e43c9f37deae177819658d2b665431`.
+- Real `finsight-benchmark-audit validate --split development` command: **52 questions / 19 question-linked filings / 59 structurally valid references / 49 distinct annotated pages**. Development-only normalized exact matching: **17/41**, with 24 nonmatches retained as mechanical diagnostics. No new holdout quote feedback or answer/retrieval evaluation is produced.
+- Detailed development annotations/IDs/page diagnostics are written only to ignored `data/evaluation/`; public split artifacts contain original IDs and reproducibility metadata only.

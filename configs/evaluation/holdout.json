@@ -1,0 +1,29 @@
+{
+  "algorithm_version":"company-reasoning-v1",
+  "dataset_sha256":"a5a2aa673e573e55675fc3c0f9aa38c1cf59d2abc91edb077534f71f10a71877",
+  "policy_fingerprint":"96dcd80af630fc48ca30b8ea8972d626c7297a60607f0afa1ecef4447579712f",
+  "question_ids":[
+    "financebench_id_00585",
+    "financebench_id_00651",
+    "financebench_id_00669",
+    "financebench_id_00678",
+    "financebench_id_00757",
+    "financebench_id_00799",
+    "financebench_id_00956",
+    "financebench_id_00995",
+    "financebench_id_01028",
+    "financebench_id_01079",
+    "financebench_id_01328",
+    "financebench_id_01474",
+    "financebench_id_01935",
+    "financebench_id_01981",
+    "financebench_id_03069",
+    "financebench_id_04481"
+  ],
+  "schema_version":"1",
+  "seed":42,
+  "selected_ids_fingerprint":"e7597ba735f3c9e14ed3d071509218b4261a2a9c3894b68e41d6dbd6ae95ec5d",
+  "source_fingerprint":"7376d03d8183077b92ed98b8c4e3a584fefd02202b75feba82cdc13b2519fad3",
+  "split":"holdout",
+  "split_fingerprint":"e6ec481633654b779721f1d94c7aa05a65e43c9f37deae177819658d2b665431"
+}
