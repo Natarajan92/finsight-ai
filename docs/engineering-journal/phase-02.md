@@ -501,3 +501,78 @@ from resolution alone. No provider credits have been consumed in this planning.
   $0.18054656 = $0.33787958, within remaining $0.743890. Cached repeated text can
   cover 24 additional unprepared windows. Provider calls zero. Post-integration
   ledger reconciliation confirms unchanged 112 settled/one unknown and all totals.
+
+### P2-012 - Single-document interactive notebook requested
+
+- **Actor/category:** Human / implementation steering within Phase 2.
+- **Material prompt:** "Lets create a jupyter notebook where i can call these
+  fucntions explicitly and test the functionality one by one and understnad each
+  process, instead of all 6 company, lets take one company and do the process for
+  that one company using jupyter notebook and validate it as per architecture."
+  The human will execute and change logic themselves, using one company document.
+- **Intent/design:** guided cells over the existing architecture, default AMD
+  2022 10-K, editable document/configuration/question, explicit small embedding
+  batches, cache-only index construction, separate admission/query/retrieval/
+  packing/prompt/generation/citation/trace stages and optional shared service.
+  All network actions default off; no model calls by Codex. One filing reduces
+  workload but does not guarantee an individual request avoids a timeout.
+- **Scope:** document-scoped learning experiment, not the full-corpus benchmark.
+  Keep existing Phase 2 checkout/workspace preference. Isolate notebook manifests,
+  page caches/indexes/traces, reuse valid embedding cache and the same durable
+  spending authority, retain the existing unknown reservation. No ledger reset,
+  baseline manifest/split change, provider-model change or later-phase work.
+- **Workflow:** Superpowers bounded design/TDD, preserving the already approved
+  architecture and the user's explicit notebook-creation instruction. Six notebook
+  execution/scope/cache/deadline/timeout tests first failed with the missing file
+  (one failure/five fixture assertions). Optional Jupyter pins verified against
+  official PyPI metadata: ipykernel 7.4.0, nbformat 5.11.1, nbclient 0.11.0.
+  Kernel verification and final outcomes follow after implementation.
+- **Implementation:** `notebooks/01_single_document_rag.ipynb`, 43 unexecuted
+  cells over the real extraction/chunk/catalog/cache/index/retrieval/context/
+  prompt/generation/citation APIs. Explicit `run=False` defaults on every network
+  example, four-input manual batches (editable 1..16), cache-only index adapter,
+  fresh per-stage contexts, request/config bindings, local manual receipts,
+  optional shared-service call, and explicit cleanup. No production modules changed.
+  Root README documents optional dependency installation and `.venv` kernel selection.
+- **Debugging/review:** the first implementation run exposed Windows path length
+  overflow under temporary checkouts. Short path labels now retain full validated
+  identities in manifests. Six notebook tests then passed. A fresh read-only
+  Superpowers reviewer found one Important usage-summary error: known tokens could
+  convert unknown cost to zero, plus a Minor model-call count mismatch with the
+  service. Two RED regression cases reproduced the problem; field-independent
+  aggregation now preserves unknown values and counts paid Anthropic calls
+  separately from embeddings. Eight notebook cases pass after the fix. Client
+  setup also closes previous resources when rerun. The first full-suite run had
+  314 passes/two new notebook failures from an order-dependent tokenizer test stub;
+  patching the factory's already-imported binding fixes the fixture without a
+  production change. All review findings are addressed; no declined live-provider
+  claim is inferred from this offline review.
+- **Real kernel evidence:** executed all shipped defaults in a real project Python
+  Jupyter kernel with outbound sockets blocked, retaining the executed copy only
+  in ignored scratch storage. AMD 2022 has 121 pages and 313 source-derived chunks.
+  All cells passed, external requests and paid attempts were zero, and 557 original
+  PDF/annotation/manifest/Phase 1 cache/frozen split files remained hash-identical.
+  The original notebook retains empty outputs and null execution counts.
+  Shared budget remained $0.006045 accounted + $0.000065 reserved, with $3.993890
+  working/$0.743890 Phase 2 available and the $1 reserve intact.
+- **Checks so far:** `uv lock --check` (137 packages), `uv build`,
+  `python -m finsight.smoke`, `python -m finsight.cli smoke --synthetic`,
+  `python -m ruff check .`, and `python -m ruff format --check .` passed.
+  `python -m pytest tests/rag/test_single_document_notebook.py
+  --basetemp=.pytest-tmp/nb-g3 -q --tb=short`: eight passed. Final full-suite,
+  rerun kernel evidence and outgoing scan recorded below after completion.
+- **Final verification:** `python -m pytest --basetemp=.pytest-tmp/nb-v2 -q
+  --tb=short`: **318 passed, one host symlink skip, seven opt-in integration tests
+  deselected**, 62.60 seconds. Fresh Ruff lint/format and `git diff --check` passed.
+  The final 43-cell notebook passed a second real Jupyter execution with external
+  sockets blocked: 121 pages/313 chunks, zero external requests/paid attempts,
+  unchanged budget and all 557 preserved file hashes. All 107 existing locked
+  package versions are unchanged; 30 packages were added only for optional tooling.
+  No live generation, provider retry, budget reconciliation/reset, full-corpus
+  resumption, benchmark acceptance, push, PR or merge was performed.
+- **Outgoing/local checkpoint:** staged content scan passed for exactly seven
+  intended files with no checked credential patterns; staged whitespace check
+  passed. `.env`, budget authority/database, notebook caches/indexes/traces and
+  executed scratch notebook are ignored. The delivered notebook is outputless.
+  Local conventional commit only; the existing Phase 2 branch and outstanding
+  full-corpus acceptance checkpoint remain for human review and manual testing.

@@ -236,3 +236,37 @@ The current real build retains 1,792 of 22,070 chunk vectors. Its uncertain time
 reservation remains held; the development answer campaign has not run. Review the
 [acceptance/recovery record](results/phase-2-baseline-smoke.md) before explicitly
 resuming paid work. Phase 2 is incomplete until that exit gate passes.
+
+### Explore one filing in Jupyter
+
+Open [the single-document walkthrough](notebooks/01_single_document_rag.ipynb) to
+call and inspect each existing architecture stage yourself. Install its optional
+kernel tools from the repository root:
+
+```powershell
+uv sync --locked --group notebook
+```
+
+In VS Code, open the notebook and select this repository's `.venv` Python kernel.
+It defaults to `AMD_2022_10K`; edit `DOC_NAME`, chunk/retrieval settings, and the
+question in the setup cells. Restart the kernel and rerun setup after configuration
+changes. The notebook explains each stage and displays source spans, candidates,
+retained evidence, prompts, draft, citations, usage and budget.
+
+All network examples ship with `run=False`, so **Run All makes no provider
+requests**. To test manually, enable each call individually. Document embedding
+handles only one small batch per invocation (four unique missing texts by default,
+editable from one to sixteen); repeat that cell until all vectors are cached.
+The index-building cell reads cached vectors exclusively. Then proceed through
+question admission, query embedding, retrieval, packing, prompt admission,
+generation and citation validation. An optional shared-service call buys another
+generation and writes a standard trace. Save a manual receipt before restarting
+if you want to keep the stepwise results.
+
+The walkthrough uses isolated ignored page caches/indexes/traces, the shared
+embedding cache, and the **same existing budget ledger and authority**, including
+previous spend and uncertain reservations. Rates must still be verified within
+24 hours. No additional allowance is created. Smaller requests can still time out;
+inspect the error and retained reservation before retrying. Keep notebook outputs
+local and clear them before sharing. This scoped experiment leaves the full-corpus
+acceptance gate outstanding.
