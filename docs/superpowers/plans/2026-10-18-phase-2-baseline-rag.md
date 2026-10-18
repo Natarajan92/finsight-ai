@@ -232,7 +232,7 @@ Test combined company/document/period filters, unknown/conflicting filters, unfi
 
 Counting is a traced, known-free network operation in live mode and a fake in CI. Cache counts by model and exact counted payload. Count labels/headings/separators; trim only already-covered source intervals, retaining novel rows/years and mapping every remaining fragment to its original page. Evidence IDs hash chunk ID plus retained spans. A quote cannot cross an inserted separator. Retain headings already present in selected evidence; expose missing-heading/table-boundary risks instead of reconstructing columns. Respect `request.top_k`, capped by 15, with default 5; the token ceiling always applies.
 
-- [ ] **Step 1 - Write failing packing/counting tests**, including:
+- [x] **Step 1 - Write failing packing/counting tests**, including:
 
 ```python
 assert packet.token_count <= 3500
@@ -243,10 +243,10 @@ assert "USD millions" in packed_text and "(25)" in packed_text
 ```
 
 Test overlapping spans preserve all novel row text, duplicate chunks do not repeat evidence, same wording on different sources remains distinct, empty input returns an empty packet, over-budget chunks are explicitly dropped, quote spans map after deduplication, and missing counter/deadline failures block generation. Assert full-input padding: estimate 5,000 becomes 5,512; estimate 5,500 becomes 6,050 and is rejected against the 6,000 limit.
-- [ ] **Step 2 - Run RED:** `uv run --locked pytest tests/rag/test_token_counting.py tests/rag/test_context_packing.py --basetemp=.pytest-tmp/p2 -q`.
-- [ ] **Step 3 - Implement counting and packing.** Count the question before embedding, reject over 512, enforce generation-model evidence/full-input limits, and record the counting method/estimates. Include serialized schema in counting even if the counter API does not accept the native output format. Do not use a whitespace/embedding-tokenizer fallback for Claude admission. Model-specific counting failures are explicit errors.
-- [ ] **Step 4 - Run GREEN:** same tests; verify no generation or paid reservation occurs for empty/oversized/uncountable input.
-- [ ] **Step 5 - Common gate and commit:** `feat: assemble bounded evidence with exact source spans`.
+- [x] **Step 2 - Run RED:** `uv run --locked pytest tests/rag/test_token_counting.py tests/rag/test_context_packing.py --basetemp=.pytest-tmp/p2 -q`.
+- [x] **Step 3 - Implement counting and packing.** Count the question before embedding, reject over 512, enforce generation-model evidence/full-input limits, and record the counting method/estimates. Include serialized schema in counting even if the counter API does not accept the native output format. Do not use a whitespace/embedding-tokenizer fallback for Claude admission. Model-specific counting failures are explicit errors.
+- [x] **Step 4 - Run GREEN:** same tests; verify no generation or paid reservation occurs for empty/oversized/uncountable input.
+- [x] **Step 5 - Common gate and commit:** `feat: assemble bounded evidence with exact source spans`.
 
 ## Task 7: Versioned grounded prompt and structured Claude generation
 
