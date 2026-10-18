@@ -232,6 +232,21 @@ made. Test runtimes above are test-run durations, not answer latency measurement
 - Phase 1 base clarification requested: `project.md` requires latest merged main
   or explicit stacked-branch approval. No answer/merge/stacking inferred.
 - Local correction verification and second CI result follow when observed.
+
+### Later evidence reconciled during Phase 1
+
+- Corrected code commit `61e377e144375d207e91ab92ade2410f9a89d284` passed actual
+  Actions run [39111532667](https://github.com/Natarajan92/finsight-ai/actions/runs/39111532667).
+  Both Ubuntu job `117628537191` and Windows job `117628537284` completed successfully;
+  all setup, lock/install, lint/format, unit, smoke, and build steps succeeded.
+  Job status was rechecked through the GitHub connector during P1-004. Historical
+  job logs recorded 65 passed (Ubuntu 0.84s; Windows 0.81s).
+- The human subsequently created/merged [PR #1](https://github.com/Natarajan92/finsight-ai/pull/1)
+  and confirmed the merge in P1-001. Main became `310c3146af9b7dcded5e85dbcd91a149324cb871`;
+  the Phase 1 branch starts from that merged code. A later published evidence-only
+  Phase 0 commit (`0ef4066`) was outside the merge; this addition reconciles the facts
+  without copying unrelated implementation changes.
+- Phase 0 success is not evidence that the unpushed Phase 1 CI has run.
 - Correction gates: `uv lock --check`, both Ruff checks,
   `uv run --locked pytest --basetemp=.pytest-tmp -q` (65 passed in 2.43s),
   `uv run --locked finsight-smoke`, `uv build`, and `git diff --check` all passed.

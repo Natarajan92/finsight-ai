@@ -5,17 +5,20 @@ build-backend = "uv_build"
 [project]
 name = "finsight-ai"
 version = "0.1.0"
-description = "Evidence-first financial document intelligence: Phase 0 foundation"
+description = "Evidence-first financial document intelligence"
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
 license = "MIT"
 dependencies = [
     "pydantic==2.13.4",
     "pydantic-settings==2.14.1",
+    "PyMuPDF==1.28.2",
 ]
 
 [project.scripts]
 finsight-smoke = "finsight.smoke:main"
+finsight-ingest = "finsight.ingestion.cli:main"
+finsight-benchmark-audit = "finsight.evaluation.cli:main"
 
 [dependency-groups]
 dev = ["pytest==9.1.1", "ruff==0.17.1"]
@@ -26,7 +29,7 @@ module-name = "finsight"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = '-ra --strict-markers -m "not integration"'
-markers = ["integration: explicitly authorized external/provider-backed checks"]
+markers = ["integration: opt-in local-source or separately authorized provider checks"]
 
 [tool.ruff]
 target-version = "py312"

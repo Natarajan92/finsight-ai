@@ -24,15 +24,6 @@ class DocumentManifest(SourceMetadata):
     ingestion_version: NonBlank
 
 
-class Page(Contract):
-    document_id: NonBlank
-    page_index: PageIndex
-    text: str
-    extraction_status: Literal["ok", "empty", "error"]
-    parser_version: NonBlank
-    table_diagnostics: tuple[NonBlank, ...] = ()
-
-
 class SourceSpan(Contract):
     """Half-open character offsets into one unchanged extracted PDF page."""
 
@@ -44,6 +35,48 @@ class SourceSpan(Contract):
     def ordered_offsets(self) -> Self:
         if self.char_end <= self.char_start:
             raise ValueError("Source span must have char_end > char_start")
+        return self
+
+
+class TextBlock(Contract):
+    block_index: NonnegativeInt
+    bbox: tuple[float, float, float, float]
+    text: NonBlank
+    source_span: SourceSpan
+
+    @model_validator(mode="after")
+    def ordered_bbox(self) -> Self:
+        x0, y0, x1, y1 = self.bbox
+        if x1 < x0 or y1 < y0:
+            raise ValueError("Reversed bounding box")
+        return self
+
+
+class Page(Contract):
+    document_id: NonBlank
+    page_index: PageIndex
+    text: str
+    extraction_status: Literal["ok", "empty", "error"]
+    parser_version: NonBlank
+    table_diagnostics: tuple[NonBlank, ...] = ()
+    text_blocks: tuple[TextBlock, ...] = ()
+
+    @model_validator(mode="after")
+    def proven_blocks(self) -> Self:
+        previous_end = 0
+        indexes = set()
+        for block in self.text_blocks:
+            span = block.source_span
+            if (
+                span.page_index != self.page_index
+                or span.char_start < previous_end
+                or span.char_end > len(self.text)
+                or block.block_index in indexes
+                or self.text[span.char_start : span.char_end] != block.text
+            ):
+                raise ValueError("Block must identify an ordered exact page substring")
+            indexes.add(block.block_index)
+            previous_end = span.char_end
         return self
 
 

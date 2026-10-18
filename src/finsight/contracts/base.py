@@ -1,5 +1,7 @@
 """Shared scalar constraints, without runtime adapters or benchmark labels."""
 
+import hashlib
+import json
 from typing import Annotated
 
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field, StringConstraints
@@ -21,3 +23,11 @@ NonnegativeFloat = Annotated[float, Field(ge=0, allow_inf_nan=False)]
 
 class Contract(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True, allow_inf_nan=False)
+
+
+def fingerprint(value: object) -> str:
+    """Portable SHA-256 of canonical JSON, never Python's randomized hash()."""
+    serialized = json.dumps(
+        value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False
+    )
+    return hashlib.sha256(serialized.encode("utf-8")).hexdigest()
