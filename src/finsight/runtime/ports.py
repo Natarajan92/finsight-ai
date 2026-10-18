@@ -4,12 +4,15 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 from time import monotonic
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol
 
 from finsight.contracts.documents import Page
 from finsight.contracts.runtime import BaselineConfig
 from finsight.contracts.tracing import RunTrace
 from finsight.runtime.errors import FinsightError
+
+if TYPE_CHECKING:
+    from finsight.retrieval.reranking import RerankResult
 
 
 @dataclass(frozen=True)
@@ -46,6 +49,10 @@ class TokenCounter(Protocol):
     def count_prompt(
         self, system: str, user: str, schema: dict[str, object], context: CallContext
     ) -> int: ...
+
+
+class Reranker(Protocol):
+    def rerank(self, question, candidates, context: CallContext) -> "RerankResult": ...
 
 
 class TraceRecorder(Protocol):

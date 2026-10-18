@@ -58,3 +58,19 @@
   Full staged suite: **329 passed, one host symlink skip, seven integration
   deselected**, 68.27s; Ruff lint/format passed for 140 files. Original notebook
   hash and staged outgoing checks passed; provider calls in verification were zero.
+
+### Task 3 — Offline CPU reranking
+
+- Four initial RED cases reproduced the missing local reranker. Implemented
+  official pinned ONNX/tokenizer artifact preparation with weight hash checking,
+  offline CPU loader and single-thread inference. No GPU, PyTorch or alternate
+  model is installed. ONNX Runtime 1.31.0 was already locked/installed; made that
+  dependency explicit and refreshed lock metadata offline (137 packages).
+- Full-pool ranking retains dense provenance, uses complete overlapping pair
+  windows/max chunk logits, stable chunk-ID ties and validated local score caches.
+  Missing/changed artifacts, nonfinite scores, long queries and backend errors
+  fail explicitly. Five focused cases pass; external ML inference/downloads are
+  represented only at their boundary. Real pinned-model verification follows.
+- Full staged suite: **334 passed, one host symlink skip, seven integration
+  deselected**, 65.59s. Ruff lint/format passed for 143 files. Existing dependency
+  versions did not change; only direct project dependency metadata was added.
