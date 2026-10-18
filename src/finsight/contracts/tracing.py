@@ -4,7 +4,9 @@ from typing import Literal
 
 from .answers import Answer
 from .base import Contract, NonBlank, NonnegativeFloat
-from .retrieval import RetrievalCandidate
+from .context import EvidencePacket
+from .generation import DraftAnswer, GroundedPrompt
+from .retrieval import QueryRequest, RetrievalCandidate
 from .runtime import Money, ProviderUsage
 
 
@@ -19,6 +21,8 @@ class ProviderAttempt(Contract):
     usage: ProviderUsage | None = None
     error_code: str | None = None
     latency_ms: NonnegativeFloat = 0
+    started_monotonic: NonnegativeFloat = 0
+    input_count: int = 1
 
 
 class RunTrace(Contract):
@@ -28,6 +32,13 @@ class RunTrace(Contract):
     index_fingerprint: str | None = None
     prompt_fingerprint: str | None = None
     request_fingerprint: NonBlank
+    request: QueryRequest
+    budget_id: NonBlank
+    rate_fingerprint: str | None = None
+    packet: EvidencePacket | None = None
+    prompt: GroundedPrompt | None = None
+    draft: DraftAnswer | None = None
+    counting: tuple[dict[str, object], ...] = ()
     filters: dict[str, object] = {}
     retrieved: tuple[RetrievalCandidate, ...] = ()
     packed: tuple[dict[str, object], ...] = ()

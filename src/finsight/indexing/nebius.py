@@ -34,7 +34,10 @@ class CachedNebiusEmbeddings(Embeddings):
     def estimate_embedding_batch(
         self, texts: list[str], role: Role, rates: RateBook
     ) -> CallEstimate:
-        count = sum(self.tokenizer.count(self.cache.submitted(t, role)) + 64 for t in texts)
+        counts = [self.tokenizer.count(self.cache.submitted(t, role)) for t in texts]
+        if any(c > 32768 for c in counts):
+            raise FinsightError("embedding_token_limit")
+        count = sum(c + 64 for c in counts)
         try:
             card = rates.card("nebius", self.config.embedding_model)
         except LookupError:
@@ -46,6 +49,7 @@ class CachedNebiusEmbeddings(Embeddings):
             rate_fingerprint=rates.fingerprint(),
             input_tokens=count,
             max_output_tokens=0,
+            input_count=len(texts),
             maximum_usd=card.maximum(count, 0),
         )
 

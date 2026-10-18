@@ -169,3 +169,37 @@ def test_interrupted_build_resumes_only_remaining_batches(index_setup):
     before = embeddings.calls
     result = build(setup)
     assert embeddings.calls == before + math.ceil((result.chunk_count - stored) / 16)
+
+
+def test_each_index_batch_has_a_bounded_attempt_context(index_setup, monkeypatch):
+    embeddings = index_setup[4]
+    contexts = []
+
+    def capture(context):
+        contexts.append(context)
+        return embeddings
+
+    monkeypatch.setattr(embeddings, "for_run", capture)
+    build(index_setup)
+    assert contexts and all(c.deadline - c.clock() <= 45 for c in contexts)
+
+
+def test_failed_reopen_releases_its_client(index_setup, monkeypatch):
+    from finsight.indexing.store import LocalVectorStore
+
+    build(index_setup)
+    created = []
+    original = LocalVectorStore.__init__
+
+    def capture(self, *args, **kwargs):
+        original(self, *args, **kwargs)
+        created.append(self)
+
+    def reject(*args, **kwargs):
+        raise FinsightError("index_integrity")
+
+    monkeypatch.setattr(LocalVectorStore, "__init__", capture)
+    monkeypatch.setattr(LocalVectorStore, "validate", reject)
+    with pytest.raises(FinsightError, match="index_integrity"):
+        reopen(index_setup)
+    assert created[0].client._closed

@@ -59,7 +59,14 @@ class LocalVectorStore:
             or settings.hnsw.num_threads != 1
             or settings.embedding_function is not None
         ):
+            self.client.close()
             raise FinsightError("index_integrity")
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        self.client.close()
 
     def rows(self):
         for offset in range(0, self.collection.count(), 128):

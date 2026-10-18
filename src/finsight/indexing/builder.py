@@ -34,6 +34,7 @@ def open_index(
 ) -> DenseRetriever:
     if not (root / "manifest.json").is_file():
         raise FinsightError("index_incomplete")
+    store = None
     try:
         manifest = IndexManifest.model_validate_json(
             (root / "manifest.json").read_text(encoding="utf-8")
@@ -61,8 +62,12 @@ def open_index(
         store.validate(catalog, corpus, manifest.dimension, manifest.vector_hashes, complete=True)
         return DenseRetriever(store, catalog, manifest, corpus, expected, pages, embeddings)
     except FinsightError:
+        if store is not None:
+            store.client.close()
         raise
     except Exception:
+        if store is not None:
+            store.client.close()
         raise FinsightError("index_integrity") from None
 
 
@@ -78,9 +83,13 @@ def build_index(
 ) -> IndexManifest:
     with index_build_lock(root):
         if (root / "manifest.json").exists():
-            return open_index(
+            reopened = open_index(
                 root, config, corpus, pages=pages, embeddings=embeddings, tokenizer=tokenizer
-            ).manifest
+            )
+            try:
+                return reopened.manifest
+            finally:
+                reopened.store.client.close()
         context.remaining()
         catalog = create_catalog(corpus, pages, config, tokenizer)
         path = root / "catalog.json"
@@ -103,43 +112,57 @@ def build_index(
                 hashes = payload["hashes"]
             except (ValueError, KeyError, OSError):
                 raise FinsightError("index_integrity") from None
-        store = LocalVectorStore(root / "chroma", create=True)
-        rows = store.validate(catalog, corpus, config.embedding_dimension, hashes, complete=False)
-        if set(hashes) - set(catalog.chunks_by_id):
-            raise FinsightError("index_integrity")
-        pending = [c for c in catalog.chunks if c.chunk_id not in rows or c.chunk_id not in hashes]
-        docs = {d.document_id: d for d in corpus.documents}
-        bound = embeddings.for_run(context)
-        for offset in range(0, len(pending), 16):
-            context.remaining()
-            batch = pending[offset : offset + 16]
-            vectors = bound.embed_documents([c.content for c in batch])
-            if len(vectors) != len(batch):
-                raise FinsightError("embedding_shape")
-            vectors = [normalize_vector(v, config.embedding_dimension) for v in vectors]
-            hashes.update({c.chunk_id: vector_hash(v) for c, v in zip(batch, vectors, strict=True)})
-            # Persist vector identity first; a crash can require re-upserting cached vectors.
-            write_json_atomic(ledger_path, {"hashes": hashes, "fingerprint": fingerprint(hashes)})
-            store.collection.upsert(
-                ids=[c.chunk_id for c in batch],
-                embeddings=vectors,
-                documents=[c.content for c in batch],
-                metadatas=[chunk_metadata(c, docs[c.document_id]) for c in batch],
+        with LocalVectorStore(root / "chroma", create=True) as store:
+            rows = store.validate(
+                catalog, corpus, config.embedding_dimension, hashes, complete=False
             )
-        store.validate(catalog, corpus, config.embedding_dimension, hashes, complete=True)
-        manifest = IndexManifest(
-            budget_id=config.budget_id,
-            catalog_fingerprint=catalog.payload_fingerprint,
-            source_fingerprint=corpus.source_fingerprint,
-            config_fingerprint=config.fingerprint(),
-            chunk_ids=tuple(c.chunk_id for c in catalog.chunks),
-            chunk_count=len(catalog.chunks),
-            dimension=config.embedding_dimension,
-            model=config.embedding_model,
-            tokenizer_revision=config.tokenizer_revision,
-            tokenizer_fingerprint=catalog.tokenizer_fingerprint,
-            software=software_versions(),
-            vector_hashes=hashes,
-        )
-        write_json_atomic(root / "manifest.json", manifest.model_dump(mode="json"))
-        return manifest
+            if set(hashes) - set(catalog.chunks_by_id):
+                raise FinsightError("index_integrity")
+            pending = [
+                c for c in catalog.chunks if c.chunk_id not in rows or c.chunk_id not in hashes
+            ]
+            docs = {d.document_id: d for d in corpus.documents}
+            for offset in range(0, len(pending), 16):
+                context.remaining()
+                batch_context = CallContext(
+                    context.run_id,
+                    context.phase,
+                    min(context.deadline, context.clock() + config.deadline_s),
+                    context.clock,
+                )
+                bound = embeddings.for_run(batch_context)
+                batch = pending[offset : offset + 16]
+                vectors = bound.embed_documents([c.content for c in batch])
+                if len(vectors) != len(batch):
+                    raise FinsightError("embedding_shape")
+                vectors = [normalize_vector(v, config.embedding_dimension) for v in vectors]
+                hashes.update(
+                    {c.chunk_id: vector_hash(v) for c, v in zip(batch, vectors, strict=True)}
+                )
+                # Persist vector identity first; a crash can require re-upserting cached vectors.
+                write_json_atomic(
+                    ledger_path, {"hashes": hashes, "fingerprint": fingerprint(hashes)}
+                )
+                store.collection.upsert(
+                    ids=[c.chunk_id for c in batch],
+                    embeddings=vectors,
+                    documents=[c.content for c in batch],
+                    metadatas=[chunk_metadata(c, docs[c.document_id]) for c in batch],
+                )
+            store.validate(catalog, corpus, config.embedding_dimension, hashes, complete=True)
+            manifest = IndexManifest(
+                budget_id=config.budget_id,
+                catalog_fingerprint=catalog.payload_fingerprint,
+                source_fingerprint=corpus.source_fingerprint,
+                config_fingerprint=config.fingerprint(),
+                chunk_ids=tuple(c.chunk_id for c in catalog.chunks),
+                chunk_count=len(catalog.chunks),
+                dimension=config.embedding_dimension,
+                model=config.embedding_model,
+                tokenizer_revision=config.tokenizer_revision,
+                tokenizer_fingerprint=catalog.tokenizer_fingerprint,
+                software=software_versions(),
+                vector_hashes=hashes,
+            )
+            write_json_atomic(root / "manifest.json", manifest.model_dump(mode="json"))
+            return manifest

@@ -112,9 +112,21 @@ class BudgetLedger:
         return accounted, reserved, phase2
 
     def reserve(
-        self, request_id: str, provider: str, model: str, maximum_usd: Decimal, phase: int
+        self,
+        request_id: str,
+        provider: str,
+        model: str,
+        maximum_usd: Decimal,
+        phase: int,
+        *,
+        working_usd: Decimal = Decimal("4"),
+        phase2_usd: Decimal = Decimal("0.75"),
     ) -> Reservation:
         amount = micro_usd(maximum_usd)
+        micro_usd(working_usd)
+        micro_usd(phase2_usd)
+        working_cap = min(IDENTITY["working"], int(working_usd * 1_000_000))
+        phase_cap = min(IDENTITY["phase2"], int(phase2_usd * 1_000_000))
         if not request_id.strip() or not model.strip() or provider not in {"nebius", "anthropic"}:
             raise FinsightError("budget_identity")
         if isinstance(phase, bool) or not isinstance(phase, int) or phase < 2:
@@ -126,8 +138,8 @@ class BudgetLedger:
             ).fetchone():
                 raise FinsightError("duplicate_request")
             accounted, reserved, phase2 = self._totals(connection)
-            if accounted + reserved + amount > IDENTITY["working"] or (
-                phase == 2 and phase2 + amount > IDENTITY["phase2"]
+            if accounted + reserved + amount > working_cap or (
+                phase == 2 and phase2 + amount > phase_cap
             ):
                 raise FinsightError("budget_exceeded")
             connection.execute(

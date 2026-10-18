@@ -104,6 +104,7 @@ class ClaudeTokenCounter:
                         purpose="free_token_count",
                         error_code=error,
                         latency_ms=max(0, (context.clock() - started) * 1000),
+                        started_monotonic=started,
                     )
                 )
 

@@ -193,3 +193,14 @@ def test_deadline_prevents_retry_after_first_response(setup_dispatch):
     with pytest.raises(FinsightError, match="deadline_exceeded"):
         dispatch.execute(estimate, send, lambda _: None, context)
     assert len(calls) == 1
+
+
+def test_lower_configured_phase_limit_is_enforced_atomically(setup_dispatch):
+    from finsight.contracts import BaselineConfig
+
+    dispatch, estimate, context, rates = setup_dispatch
+    bounded = type(dispatch)(dispatch.ledger, rates, config=BaselineConfig(phase2_usd="0.001"))
+    with pytest.raises(FinsightError, match="budget_exceeded"):
+        bounded.execute(
+            estimate, lambda: pytest.fail("lower cap bypassed"), lambda _: None, context
+        )

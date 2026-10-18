@@ -41,3 +41,7 @@ jobs:
         run: uv run --locked finsight-benchmark-audit --help
       - name: Package build
         run: uv build
+      - name: Baseline RAG command installation
+        run: uv run --locked finsight-rag --help
+      - name: Synthetic RAG pipeline
+        run: uv run --locked finsight-rag smoke --synthetic

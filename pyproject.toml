@@ -27,6 +27,7 @@ dependencies = [
 finsight-smoke = "finsight.smoke:main"
 finsight-ingest = "finsight.ingestion.cli:main"
 finsight-benchmark-audit = "finsight.evaluation.cli:main"
+finsight-rag = "finsight.cli:main"
 
 [dependency-groups]
 dev = ["pytest==9.1.1", "ruff==0.17.1"]

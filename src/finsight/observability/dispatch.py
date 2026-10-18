@@ -5,7 +5,7 @@ from threading import Lock
 from typing import TypeVar
 
 from finsight.contracts.budget import CallEstimate, RateBook
-from finsight.contracts.runtime import ProviderUsage
+from finsight.contracts.runtime import BaselineConfig, ProviderUsage
 from finsight.contracts.tracing import ProviderAttempt
 from finsight.runtime.errors import FinsightError
 from finsight.runtime.ports import CallContext
@@ -16,9 +16,12 @@ T = TypeVar("T")
 
 
 class GuardedDispatcher:
-    def __init__(self, ledger: BudgetLedger, rates: RateBook):
+    def __init__(
+        self, ledger: BudgetLedger, rates: RateBook, *, config: BaselineConfig | None = None
+    ):
         self.ledger = ledger
         self.rates = rates
+        self.config = config or BaselineConfig()
         self._attempts: list[ProviderAttempt] = []
         self._lock = Lock()
 
@@ -54,7 +57,13 @@ class GuardedDispatcher:
                 raise FinsightError("rate_integrity")
             identity = estimate.request_id + (":retry1" if attempt_number else "")
             reservation = self.ledger.reserve(
-                identity, estimate.provider, estimate.model, estimate.maximum_usd, context.phase
+                identity,
+                estimate.provider,
+                estimate.model,
+                estimate.maximum_usd,
+                context.phase,
+                working_usd=self.config.working_usd,
+                phase2_usd=self.config.phase2_usd,
             )
             context.remaining()
             self.ledger.mark_dispatched(reservation.reservation_id)
@@ -107,12 +116,14 @@ class GuardedDispatcher:
                     run_id=context.run_id,
                     provider=estimate.provider,
                     model=estimate.model,
-                    purpose="paid_attempt",
+                    purpose="embeddings" if estimate.provider == "nebius" else "generation",
                     reservation_id=reservation.reservation_id,
                     maximum_usd=reservation.maximum_usd,
                     usage=usage,
                     error_code=error,
                     latency_ms=max(0, (context.clock() - started) * 1000),
+                    started_monotonic=started,
+                    input_count=estimate.input_count,
                 )
                 with self._lock:
                     self._attempts.append(record)

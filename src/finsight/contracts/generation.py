@@ -2,7 +2,7 @@
 
 from typing import Annotated, Literal, Self
 
-from pydantic import Field, model_validator
+from pydantic import ConfigDict, Field, model_validator
 
 from .answers import FiniteDecimal
 from .base import Contract, NonBlank, Sha256
@@ -53,6 +53,7 @@ class DraftAnswer(Contract):
 
 
 class GroundedPrompt(Contract):
+    model_config = ConfigDict(serialize_by_alias=True)
     system: NonBlank
     user: NonBlank
     output_schema: dict[str, object] = Field(alias="schema")

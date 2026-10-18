@@ -109,6 +109,7 @@ class CallEstimate(Contract):
     max_output_tokens: NonnegativeInt
     maximum_usd: Money
     service_tier: Literal["default"] = "default"
+    input_count: NonnegativeInt = 1
 
 
 class Reservation(Contract):

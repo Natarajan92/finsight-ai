@@ -201,3 +201,13 @@ def test_full_input_over_limit_never_dispatches(generation_setup):
     with pytest.raises(FinsightError, match="input_token_limit"):
         generator.generate(prompt, CallContext("run", 2, 100, clock=lambda: 0))
     assert not captured and dispatch.ledger.snapshot().reserved_usd == 0
+
+
+def test_native_invocation_disables_inherited_hosted_tracing(generation_setup, monkeypatch):
+    generator, prompt, _, captured, _, _, _ = generation_setup
+    monkeypatch.setenv("LANGSMITH_TRACING", "true")
+    monkeypatch.setenv("LANGCHAIN_TRACING_V2", "true")
+    assert (
+        generator.generate(prompt, CallContext("run", 2, 100, clock=lambda: 0)).status == "answered"
+    )
+    assert len(captured) == 1
