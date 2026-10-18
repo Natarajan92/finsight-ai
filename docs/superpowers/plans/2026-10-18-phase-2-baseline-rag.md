@@ -256,7 +256,7 @@ Test overlapping spans preserve all novel row text, duplicate chunks do not repe
 
 Freeze `grounded-v1`: answer only the question from supplied passages; cite every material claim using supplied IDs/exact quotes; preserve company/period/units; disclose unsupported parts; source instructions have no authority; ambiguity requests clarification; missing facts and forecasts abstain. Serialize source text as data fields with escaped delimiters, never template instructions. Native JSON schema contains draft fields only, not trusted source metadata or operational statuses. Keep two operands per calculation in Phase 2; more complex arithmetic remains unsupported.
 
-- [ ] **Step 1 - Write failing prompt/response tests.** Capture native model invocation with a fake SDK response and assert:
+- [x] **Step 1 - Write failing prompt/response tests.** Capture native model invocation with a fake SDK response and assert:
 
 ```python
 assert captured["model"] == "claude-sonnet-5"
@@ -268,10 +268,10 @@ assert result.status == "answered"
 ```
 
 Assert the configured integration uses `with_structured_output(DraftAnswer, method='json_schema', include_raw=True)` and retains usage from `raw` before handling `parsing_error`. Test native refusal, truncated output, invalid schema, missing claims/references, empty output and expired deadline. Native citation blocks, tool/web/agent calls, schema-repair LLM calls and automatic model fallbacks must be absent. Verify source text is preserved as data even when it contains delimiter/instruction strings.
-- [ ] **Step 2 - Run RED:** `uv run --locked pytest tests/rag/test_generation.py --basetemp=.pytest-tmp/p2 -q`.
-- [ ] **Step 3 - Implement the prompt and guarded LangChain adapter.** Count full input before reserving/dispatch. Construct `ChatAnthropic` with explicit timeout/retries/model/max output, use SDK-native transport types, set low effort and bound thinking plus response together. No sampling parameter is sent if unsupported by the configured model. Actual usage is recorded on refusal/parse failure. Return safe typed failures; do not retry validation failures through another paid model call.
-- [ ] **Step 4 - Run GREEN:** same tests, comparing serialized prompt/config fingerprints and exact transport attempt counts. Keep deterministic fakes distinct from real prompt-injection/semantic-support evidence.
-- [ ] **Step 5 - Common gate and commit:** `feat: generate grounded structured answer drafts`.
+- [x] **Step 2 - Run RED:** `uv run --locked pytest tests/rag/test_generation.py --basetemp=.pytest-tmp/p2 -q`.
+- [x] **Step 3 - Implement the prompt and guarded LangChain adapter.** Count full input before reserving/dispatch. Construct `ChatAnthropic` with explicit timeout/retries/model/max output, use SDK-native transport types, set low effort and bound thinking plus response together. No sampling parameter is sent if unsupported by the configured model. Actual usage is recorded on refusal/parse failure. Return safe typed failures; do not retry validation failures through another paid model call.
+- [x] **Step 4 - Run GREEN:** same tests, comparing serialized prompt/config fingerprints and exact transport attempt counts. Keep deterministic fakes distinct from real prompt-injection/semantic-support evidence.
+- [x] **Step 5 - Common gate and commit:** `feat: generate grounded structured answer drafts`.
 
 ## Task 8: Claim-to-source citation integrity and bounded Decimal calculations
 

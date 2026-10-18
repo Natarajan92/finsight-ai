@@ -30,6 +30,8 @@ class BaselineConfig(Contract):
     generation_model: NonBlank = "claude-sonnet-5"
     prompt_version: NonBlank = "grounded-v1"
     effort: Literal["low"] = "low"
+    thinking_type: Literal["adaptive"] = "adaptive"
+    generation_service_tier: Literal["standard_only"] = "standard_only"
     candidate_count: Annotated[int, Field(strict=True, ge=1, le=15)] = 15
     top_k: Annotated[int, Field(strict=True, ge=1, le=15)] = 5
     context_tokens: Annotated[int, Field(strict=True, ge=1, le=3500)] = 3500
