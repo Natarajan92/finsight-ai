@@ -321,3 +321,42 @@ the final checkpoint supplies its exact SHA.
   documentation only. The local corrective commit includes the final gate record.
 - Plan scratch is disposable only after this correction is committed; retain local
   source caches and ignored QA evidence, and leave sibling plan workspaces alone.
+
+## P1-007 - Phase 1 publication authorized
+
+- **Recorded:** 2026-10-18 15:40:43 IST (10:10:43 UTC clock); exact human message
+  time unavailable. Actor: human; category: publication/workflow.
+- **Exact human prompt:** "push the code for phase 1".
+- **Context:** local implementation `500cd4622ec2d5e109c8bea36806fae9547245ad`,
+  clean `feat/phase-1-ingestion`; original five implementation commits are local.
+- **Authorization:** push only this Phase 1 branch and open its review PR under
+  `project.md`. No merge, deployment, force push, branch deletion, or Phase 2 work.
+  This message authorizes publication; no independent human technical diagnosis or
+  explicit final implementation-review rationale was supplied.
+- Reverified `origin` as `https://github.com/Natarajan92/finsight-ai.git`;
+  `gh repo view` reports ADMIN permission and default branch `main`. `gh pr list`
+  found no existing Phase 1 PR; `git ls-remote --heads origin main feat/phase-1-ingestion`
+  confirms remote main remains `310c3146af9b7dcded5e85dbcd91a149324cb871` and no
+  remote Phase 1 branch exists before publication.
+- **Fresh pre-publication gates:** `uv lock --check`,
+  `uv sync --locked --group dev`, `uv run --locked ruff check .`,
+  `uv run --locked ruff format --check .`, `uv run --locked finsight-smoke`,
+  and `uv build` passed. Synthetic smoke: status passed, page index zero,
+  cost unknown. Wheel/source distribution built successfully.
+- `uv run --locked pytest -m "not integration" --basetemp=.pytest-tmp -q`:
+  **142 passed, 1 Windows symlink-privilege skip, 4 integration deselections
+  in 7.89s**.
+- With the documented explicit local source paths,
+  `uv run --locked pytest -m integration tests/test_corpus_integration.py --basetemp=.pytest-tmp -q`:
+  **4 passed in 6.20s**; source hashes, complete caches, and split replay verified.
+- Add this publication record and prompt-registry row as one documentation-only
+  local commit; then inspect the outgoing tree/history, ignored artifacts, limited
+  secret patterns, file sizes, and exact refspec before pushing. No runtime code,
+  source data, frozen IDs, or extraction configuration changes in this iteration.
+- At preparation time the push, PR, and remote CI are **pending**, not claimed
+  successful. The final user response will report verified remote commit/PR/CI
+  evidence. Keep the feature branch and workspace for human review afterward.
+- Pre-commit outgoing scan passed for **45 changed/current Phase 1 files** and
+  outgoing Git objects: limited secret patterns, sub-1-MB sizes, forbidden raw/
+  generated suffixes, ignored source/cache/evaluation/private paths, and 15 unique
+  prompt rows. `git diff --check` passed; only the two journal/registry files change.
