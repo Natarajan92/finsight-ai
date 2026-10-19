@@ -1,0 +1,105 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.4.1.json",
+  "config": {
+    "view": {
+      "continuousHeight": 300,
+      "continuousWidth": 300
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "arm": "A",
+        "measured_cases": 1,
+        "metric": "all_gold_pages_at_5",
+        "value": 1.0
+      },
+      {
+        "arm": "A",
+        "measured_cases": 1,
+        "metric": "candidate_pool_coverage",
+        "value": 1.0
+      },
+      {
+        "arm": "A",
+        "measured_cases": 1,
+        "metric": "document_recall_at_5",
+        "value": 1.0
+      },
+      {
+        "arm": "A",
+        "measured_cases": 1,
+        "metric": "gold_page_recall_at_5",
+        "value": 1.0
+      },
+      {
+        "arm": "A",
+        "measured_cases": 1,
+        "metric": "mrr_at_15",
+        "value": 1.0
+      },
+      {
+        "arm": "A",
+        "measured_cases": 1,
+        "metric": "page_hit_at_5",
+        "value": 1.0
+      },
+      {
+        "arm": "A",
+        "measured_cases": 1,
+        "metric": "retained_context_gold_page_recall",
+        "value": 1.0
+      }
+    ]
+  },
+  "encoding": {
+    "color": {
+      "field": "arm",
+      "type": "nominal"
+    },
+    "tooltip": [
+      {
+        "field": "arm",
+        "type": "nominal"
+      },
+      {
+        "field": "metric",
+        "type": "nominal"
+      },
+      {
+        "field": "value",
+        "type": "quantitative"
+      },
+      {
+        "field": "measured_cases",
+        "type": "quantitative"
+      }
+    ],
+    "x": {
+      "field": "metric",
+      "title": "Measured retrieval / integrity proxy",
+      "type": "nominal"
+    },
+    "xOffset": {
+      "field": "arm",
+      "type": "nominal"
+    },
+    "y": {
+      "field": "value",
+      "scale": {
+        "domain": [
+          0,
+          1
+        ]
+      },
+      "title": "Mean",
+      "type": "quantitative"
+    }
+  },
+  "height": 320,
+  "mark": {
+    "type": "bar"
+  },
+  "title": "AMD development pilot — measured proxies",
+  "width": 640
+}

@@ -47,6 +47,46 @@ Other companies, other AMD filings, four-arm comparisons and the full FinanceBen
 evaluation are outside this delivered slice. Financial accuracy and latency
 targets are not established by the single smoke question.
 
+## Evaluate the AMD development questions
+
+The evaluator uses the same guarded AMD service as the app. It validates the
+frozen split and runs its five AMD 2022 development cases. It never runs holdout
+or passes reference answers, rationale or annotated pages into the service.
+
+```powershell
+uv run --locked finsight-evaluate plan --arms A --max-cost-usd 0.25
+uv run --locked finsight-evaluate run --arms A --max-cost-usd 0.25 --allow-paid
+# Revalidate and replay the saved campaign without permission for new purchases:
+uv run --locked finsight-evaluate run --arms A
+```
+
+Only the second command permits new provider requests. Preflight must fit the
+$0.25 campaign ceiling and the existing ledger/Phase 3 allowance. Interrupted or
+altered receipts fail closed. Select `--arms ABCD` only after all four real asset
+sets are available; missing arms fail before purchases. There is no fallback.
+
+Sanitized summaries and charts go to `results/phase-4-amd/`. The private run,
+case CSV/JSONL and `review.csv` stay in ignored
+`data/evaluation/phase4/<run-id-prefix>/`. To rebuild reports from a stored run:
+
+```powershell
+uv run --locked finsight-evaluate report --run data/evaluation/phase4/<run-id-prefix>/run.json
+uv run --locked finsight-evaluate report --run data/evaluation/phase4/<run-id-prefix>/run.json --review data/evaluation/phase4/<run-id-prefix>/review.csv
+```
+
+The report command verifies the receipt checksum and contracts; the `run` command
+also reopens source-derived traces and runtime evidence. An automatic match is a
+conservative text/value proxy with an explicit scoring denominator. It cannot
+establish semantic faithfulness. Fill every material claim with `supported`,
+`unsupported` or `uncertain`, a reviewer and a reason; fingerprints bind labels to
+the exact claim and evidence. Partial or uncertain reviews leave faithfulness
+unknown. No model judge is purchased. Chart HTML requires CDN JavaScript; the
+Markdown, JSON, CSV and Vega-Lite specification remain readable offline.
+
+The [actual Phase 4 checkpoint](results/phase-4-evaluation.md) records a stopped
+1/5-case run: generation reached its configured output ceiling. The evaluator
+implementation is verified; the live quality gate remains incomplete.
+
 ## Setup
 
 Prerequisites: uv **0.12.23** and Python **3.12.15**. The Python version is selected

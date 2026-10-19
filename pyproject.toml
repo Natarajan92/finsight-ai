@@ -23,6 +23,7 @@ dependencies = [
     "langsmith==0.14.11",
     "onnxruntime==1.31.0",
     "streamlit==1.65.0",
+    "altair==6.3.0",
 ]
 
 [project.scripts]
@@ -30,6 +31,7 @@ finsight-smoke = "finsight.smoke:main"
 finsight-ingest = "finsight.ingestion.cli:main"
 finsight-benchmark-audit = "finsight.evaluation.cli:main"
 finsight-rag = "finsight.cli:main"
+finsight-evaluate = "finsight.evaluation.runner_cli:main"
 
 [dependency-groups]
 dev = ["pytest==9.1.1", "ruff==0.17.1"]

@@ -14,14 +14,26 @@ def _require(condition):
         raise FinsightError("campaign_integrity")
 
 
-def validate_campaign_trace(trace, request, catalog, corpus, pages, config, index_id, rate_id):
+def validate_campaign_trace(
+    trace,
+    request,
+    catalog,
+    corpus,
+    pages,
+    config,
+    index_id,
+    rate_id,
+    *,
+    run_fingerprint=None,
+    reranked=False,
+):
     _require(
         trace.request == request
         and trace.request_fingerprint == fingerprint(request.model_dump(mode="json"))
         and trace.filters == request.model_dump(mode="json", exclude={"question"})
         and trace.budget_id == config.budget_id
         and trace.index_fingerprint == index_id
-        and trace.config_fingerprint == config.fingerprint()
+        and trace.config_fingerprint == (run_fingerprint or config.fingerprint())
         and trace.source_fingerprint == corpus.source_fingerprint
         and trace.rate_fingerprint == rate_id
     )
@@ -41,8 +53,8 @@ def validate_campaign_trace(trace, request, catalog, corpus, pages, config, inde
             and candidate.rank == rank
             and chunk.chunk_id not in retrieved
             and candidate.source == sources[chunk.document_id]
-            and candidate.score.kind == "cosine_distance"
-            and candidate.score.direction == "lower_is_better"
+            and candidate.score.kind == ("rerank_logit" if reranked else "cosine_distance")
+            and candidate.score.direction == ("higher_is_better" if reranked else "lower_is_better")
         )
         document = documents[chunk.document_id]
         _require(

@@ -425,6 +425,7 @@ name = "finsight-ai"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "altair" },
     { name = "anthropic" },
     { name = "chromadb" },
     { name = "httpx" },
@@ -453,6 +454,7 @@ notebook = [
 
 [package.metadata]
 requires-dist = [
+    { name = "altair", specifier = "==6.3.0" },
     { name = "anthropic", specifier = "==1.15.0" },
     { name = "chromadb", specifier = "==1.5.9" },
     { name = "httpx", specifier = "==0.28.1" },

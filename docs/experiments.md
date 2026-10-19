@@ -64,3 +64,29 @@ settled, one unknown), $0.006045 accounted plus $0.000065 retained reservation.
 No Claude inference or development/holdout answer run occurred. The five real
 source/cache/split checks pass; complete-index and campaign gates fail closed.
 No query latency, answer correctness or citation-support result is available yet.
+
+## Phase 4 AMD development evaluator
+
+The delivered evaluator is explicitly scoped to AMD_2022_10K, using the five
+development IDs from the unchanged 36/16 split. This scope was chosen by the
+user's single-company application request. It is not the primary full-corpus
+experiment; full-corpus acceptance and holdout remain outstanding.
+
+The default A arm uses the existing fixed index (313 chunks), dense candidate
+pool and Claude generation through the same application service. Selecting any
+missing arm fails before provider requests. Synthetic A/C tests prove paired
+candidate reuse; they do not establish real reranker or semantic-index quality.
+
+Every evaluated response is reopened against its canonical source/trace, exact
+filters, index/config identity, packed context and rebuilt prompt before the
+offline gold join. Reports distinguish annotated-page recall, retained-context
+coverage, structural citation integrity, automatic match coverage and human
+claim support. Currency, scale and sign are preserved; percentages differ from
+percentage points. Multi-period, qualified and ambiguous quantities require
+review. Relative numeric tolerance is 0.001 with zero absolute tolerance.
+
+Run/report commands are in the [README](../README.md#evaluate-the-amd-development-questions).
+The [Phase 4 journal](engineering-journal/phase-04.md) records review findings,
+real execution status, exact verification and budget evidence. Original request
+usage and latency are distinct from incremental replay cost. No faithfulness or
+latency target is inferred from five cases or unreviewed claims.

@@ -283,3 +283,34 @@
 - Real tracing emitted Pydantic warnings for integer `maximum_usd=0`.
 - A warnings-as-error regression failed; Decimal zero fixes serialization without
   changing any charge, allowance or index identity. Contract tests pass.
+
+## BUG-023 - Automatic scoring accepted misleading quantity prefixes
+
+- Reviewer reproduced `-$25 million` matching positive money, `$25 trillion`
+  matching `$25`, per-share money matching totals and doubled-sign fragments.
+- Full-string parsing rejected malformed values, but prose extraction discarded
+  the conflicting prefix/suffix. Preserve signs around currency and reject
+  unknown adjacent units, denominators and uncovered numeric fragments. Negated
+  or qualified prose requires review. RED regressions now pass.
+
+## BUG-024 - Period checks lost attached fiscal years and monetary values
+
+- `FY2021` was invisible and quarter answers could match annual references.
+  Discarding both question years also allowed incomplete comparison answers.
+- Detect explicit fiscal years/quarters independently; require review for
+  multiple periods or period conflicts. Implicit period comes from the explicitly
+  scoped filing; explicit question periods take priority.
+- Initial fix removed `2022` inside `$2022 million`, leaving a convenient matching
+  second amount. Three new RED cases reproduced it. Protect financial spans
+  while removing validated period markers. All 51 scorer tests and independent
+  reviewer reproductions pass. No real evaluation used the flawed scorer.
+
+## BUG-025 - AMD evaluation generation reached the output ceiling (open)
+
+- The first real development case retrieved/retained its annotated page but
+  Claude used all 1,024 configured output tokens. The adapter reported
+  `generation_truncated`; no structured draft or citations were accepted.
+- This is a measured runtime limitation, not a scorer failure. Durable receipts
+  preserved the error and stopped further cases. Offline source-derived replay
+  passes without repurchase. No prompt/token-limit tuning or new campaign was
+  performed on this result. See `results/phase-4-evaluation.md`.
