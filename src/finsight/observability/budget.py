@@ -30,6 +30,7 @@ SCHEMA = (
     "CHECK((state = 'settled' AND observed IS NOT NULL) OR "
     "(state != 'settled' AND observed IS NULL)))",
 )
+PHASE3_MICRO_USD = 750_000  # Additive policy; existing identity/authority is unchanged.
 
 
 class BudgetLedger:
@@ -149,12 +150,15 @@ class BudgetLedger:
         *,
         working_usd: Decimal = Decimal("4"),
         phase2_usd: Decimal = Decimal("0.75"),
+        phase3_usd: Decimal = Decimal("0.75"),
     ) -> Reservation:
         amount = micro_usd(maximum_usd)
         micro_usd(working_usd)
         micro_usd(phase2_usd)
+        micro_usd(phase3_usd)
         working_cap = min(IDENTITY["working"], int(working_usd * 1_000_000))
         phase_cap = min(IDENTITY["phase2"], int(phase2_usd * 1_000_000))
+        phase3_cap = min(PHASE3_MICRO_USD, int(phase3_usd * 1_000_000))
         if not request_id.strip() or not model.strip() or provider not in {"nebius", "anthropic"}:
             raise FinsightError("budget_identity")
         if isinstance(phase, bool) or not isinstance(phase, int) or phase < 2:
@@ -166,8 +170,16 @@ class BudgetLedger:
             ).fetchone():
                 raise FinsightError("duplicate_request")
             accounted, reserved, phase2 = self._totals(connection)
-            if accounted + reserved + amount > working_cap or (
-                phase == 2 and phase2 + amount > phase_cap
+            phase3 = sum(
+                r[2] if r[1] == "settled" else r[0]
+                for r in connection.execute(
+                    "SELECT maximum,state,observed FROM attempts WHERE phase=3"
+                )
+            )
+            if (
+                accounted + reserved + amount > working_cap
+                or (phase == 2 and phase2 + amount > phase_cap)
+                or (phase == 3 and phase3 + amount > phase3_cap)
             ):
                 raise FinsightError("budget_exceeded")
             connection.execute(
@@ -180,6 +192,21 @@ class BudgetLedger:
             maximum_usd=dollars(amount),
             state="reserved",
         )
+
+    def phase_available(self, phase: int, *, limit_usd: Decimal | None = None) -> Decimal:
+        if type(phase) is not int or phase not in {2, 3}:
+            raise FinsightError("budget_identity")
+        cap = IDENTITY["phase2"] if phase == 2 else PHASE3_MICRO_USD
+        if limit_usd is not None:
+            cap = min(cap, micro_usd(limit_usd))
+        with self._transaction() as connection:
+            used = sum(
+                r[2] if r[1] == "settled" else r[0]
+                for r in connection.execute(
+                    "SELECT maximum,state,observed FROM attempts WHERE phase=?", (phase,)
+                )
+            )
+        return dollars(max(0, cap - used))
 
     def mark_dispatched(self, reservation_id: str) -> None:
         with self._transaction() as connection:

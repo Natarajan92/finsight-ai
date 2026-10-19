@@ -33,7 +33,7 @@ def test_phase_and_global_limits_persist(ledger):
         reserve(ledger, "two", "0.02")
     reopened = ledger_type().open(ledger.path, BUDGET_ID, anchor_path=ledger.anchor)
     assert reopened.snapshot().reserved_usd == Decimal("0.74")
-    reserve(reopened, "phase3", "3.26", 3)
+    reserve(reopened, "later-phase", "3.26", 4)
     with pytest.raises(FinsightError, match="budget_exceeded"):
         reserve(reopened, "last", "0.000001", 3)
     assert reopened.snapshot().available_usd == 0

@@ -30,6 +30,7 @@ def open_index(
     pages: PageRepository,
     embeddings: EmbeddingBackend,
     tokenizer: OffsetTokenizer,
+    chunker=None,
 ) -> DenseRetriever:
     if not (root / "manifest.json").is_file():
         raise FinsightError("index_incomplete")
@@ -41,7 +42,7 @@ def open_index(
         catalog = ChunkCatalog.model_validate_json(
             (root / "catalog.json").read_text(encoding="utf-8")
         )
-        validate_catalog(catalog, corpus, expected, pages, tokenizer)
+        validate_catalog(catalog, corpus, expected, pages, tokenizer, chunker=chunker)
         if (
             manifest.catalog_fingerprint != catalog.payload_fingerprint
             or manifest.config_fingerprint != expected.fingerprint()
@@ -79,18 +80,25 @@ def build_index(
     context: CallContext,
     *,
     tokenizer: OffsetTokenizer,
+    chunker=None,
 ) -> IndexManifest:
     with index_build_lock(root):
         if (root / "manifest.json").exists():
             reopened = open_index(
-                root, config, corpus, pages=pages, embeddings=embeddings, tokenizer=tokenizer
+                root,
+                config,
+                corpus,
+                pages=pages,
+                embeddings=embeddings,
+                tokenizer=tokenizer,
+                chunker=chunker,
             )
             try:
                 return reopened.manifest
             finally:
                 reopened.store.client.close()
         context.remaining()
-        catalog = create_catalog(corpus, pages, config, tokenizer)
+        catalog = create_catalog(corpus, pages, config, tokenizer, chunker=chunker)
         path = root / "catalog.json"
         if path.exists():
             try:

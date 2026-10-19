@@ -19,9 +19,13 @@ def create_catalog(
     pages: PageRepository,
     config: BaselineConfig,
     tokenizer: OffsetTokenizer,
+    *,
+    chunker=None,
 ) -> ChunkCatalog:
     if corpus.source_fingerprint != config.source_fingerprint:
         raise FinsightError("index_integrity")
+    if getattr(config, "chunk_strategy", "fixed") == "semantic" and chunker is None:
+        raise FinsightError("semantic_preparation_missing")
     chunks = []
     page_hashes = {}
     diagnostics = {}
@@ -35,7 +39,13 @@ def create_catalog(
                 page.model_dump(mode="json")
             )
             parsers.add(page.parser_version)
-        generated = chunk_pages(document, extracted, config, tokenizer)
+        generated = (chunker or chunk_pages)(document, extracted, config, tokenizer)
+        if any(
+            c.chunk_strategy != getattr(config, "chunk_strategy", "fixed")
+            or c.config_fingerprint != config.fingerprint()
+            for c in generated
+        ):
+            raise FinsightError("index_integrity")
         for chunk in generated:
             diagnostics[chunk.chunk_id] = chunk_diagnostics(chunk, extracted[chunk.page_start])
         chunks.extend(generated)
@@ -78,6 +88,8 @@ def validate_catalog(
     config: BaselineConfig,
     pages: PageRepository,
     tokenizer: OffsetTokenizer,
+    *,
+    chunker=None,
 ) -> None:
     if (
         catalog.payload_fingerprint
@@ -90,5 +102,5 @@ def validate_catalog(
     ):
         raise FinsightError("index_integrity")
     # Self-consistent local hashes alone cannot establish complete corpus membership.
-    if catalog != create_catalog(corpus, pages, config, tokenizer):
+    if catalog != create_catalog(corpus, pages, config, tokenizer, chunker=chunker):
         raise FinsightError("index_integrity")

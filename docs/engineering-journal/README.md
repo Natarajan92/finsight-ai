@@ -12,6 +12,9 @@ requirements, the plan-file review request, and subsequent implementation approv
 framework-led architecture review, written-spec approval, and implementation-plan
 preparation/review status.
 
+[AMD application](amd-application.md) records the authorized single-filing RAG
+delivery, Streamlit interface, live answer, free replay, review fixes and checks.
+
 - Stable IDs: P0-001, P0-002, then P1-001, etc. Record timezone and branch/base SHA.
 - Capture verbatim material prompts or label excerpts. Separate human words,
   assistant proposals and observed evidence. Record unavailable times as unavailable.

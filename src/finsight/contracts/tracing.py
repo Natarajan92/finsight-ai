@@ -1,5 +1,6 @@
 """Local run records; benchmark labels and provider objects are excluded."""
 
+from decimal import Decimal
 from typing import Literal
 
 from .answers import Answer
@@ -17,7 +18,7 @@ class ProviderAttempt(Contract):
     model: NonBlank
     purpose: NonBlank
     reservation_id: str | None = None
-    maximum_usd: Money = 0
+    maximum_usd: Money = Decimal("0")
     usage: ProviderUsage | None = None
     error_code: str | None = None
     latency_ms: NonnegativeFloat = 0

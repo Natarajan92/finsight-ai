@@ -141,6 +141,40 @@ def test_answer_boundary_and_correlated_trace(application_setup):
     assert RunTrace.model_validate_json(trace.model_dump_json()) == trace
 
 
+def test_configured_semantic_rerank_service_uses_phase3_without_breaking_answer_boundary(
+    application_setup,
+):
+    service, retriever, generator, recorder = application_setup
+    retriever.chunk_strategy = "semantic"
+    retriever.rerank = True
+    cls = type(service)
+    observed = []
+    original = generator.generate
+
+    def generate(prompt, context):
+        observed.append(context.phase)
+        return original(prompt, context)
+
+    generator.generate = generate
+    configured = cls(
+        service.config,
+        retriever,
+        service.counter,
+        generator,
+        service.pages,
+        recorder,
+        phase=3,
+        run_fingerprint="a" * 64,
+    )
+    result = configured.answer(
+        QueryRequest(
+            question="What was AMD revenue in 2022?", chunk_strategy="semantic", rerank=True
+        )
+    )
+    assert result.status == "answered" and observed == [3]
+    assert configured.last_trace.config_fingerprint == "a" * 64
+
+
 def test_empty_evidence_never_generates(application_setup):
     service, retriever, generator, recorder = application_setup
     retriever.items = ()

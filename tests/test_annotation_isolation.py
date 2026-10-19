@@ -18,8 +18,9 @@ import finsight.cli, finsight.runtime.factory, finsight.rag_smoke
 assert not any(k.startswith("finsight.evaluation") for k in sys.modules)
 print("isolated")"""
     result = subprocess.run(
-        [sys.executable, "-I", "-c", code], capture_output=True, text=True, check=True
+        [sys.executable, "-I", "-c", code], capture_output=True, text=True, check=False
     )
+    assert result.returncode == 0, result.stderr
     assert result.stdout.strip() == "isolated"
 
 
