@@ -257,3 +257,29 @@
   never trigger automatic initialization. Direct callers must supply their anchor.
 - Existing live activity is reconciled without resetting/reinitializing the ledger.
   New-path, cache-loss, reopen, concurrency and duplicate-request tests pass.
+
+## BUG-019 - Missing AMD pilot implementation
+
+- Initial checkout called a nonexistent `runtime.experiment_pilot` module.
+- Completed the scoped shared-service path with durable start/complete receipts,
+  exact source/index/request/config identities and quote validation. Tests verify
+  no duplicate purchase after errors/restarts and no cross-company dispatch.
+
+## BUG-020 - Financial prose was rendered as Markdown math
+
+- Independent review found two dollar amounts in the real AMD answer would form
+  a LaTeX delimiter pair. A literal-output regression reproduced the problem.
+- Render answers, model limitations and source quotations as text. Dollars and
+  untrusted Markdown remain literal. The regression and real AMD AppTest pass.
+
+## BUG-021 - Session reruns bypassed saved-answer checks
+
+- A receipt altered after initial display left the session answer visible.
+- Reruns now reopen through the offline validated receipt path and remove results
+  on failure. A corruption regression proves no stale answer and no extra generation.
+
+## BUG-022 - Free token-count traces serialized a non-Decimal default
+
+- Real tracing emitted Pydantic warnings for integer `maximum_usd=0`.
+- A warnings-as-error regression failed; Decimal zero fixes serialization without
+  changing any charge, allowance or index identity. Contract tests pass.

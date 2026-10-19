@@ -47,6 +47,9 @@ class BaselineApplicationService:
         pages,
         recorder,
         clock=monotonic,
+        *,
+        phase=2,
+        run_fingerprint=None,
     ):
         self.config = config
         self.retriever = retriever
@@ -55,6 +58,12 @@ class BaselineApplicationService:
         self.pages = pages
         self.recorder = recorder
         self.clock = clock
+        if type(phase) is not int or phase not in {2, 3}:
+            raise FinsightError("experiment_configuration")
+        if run_fingerprint is not None and not re.fullmatch(r"[a-f0-9]{64}", run_fingerprint):
+            raise FinsightError("experiment_configuration")
+        self.phase = phase
+        self.run_fingerprint = run_fingerprint
         self._last_id = ContextVar("finsight_trace_id", default=None)
         self._last_trace = ContextVar("finsight_terminal_trace", default=None)
         identity = RunnableLambda(lambda state: state)
@@ -93,7 +102,9 @@ class BaselineApplicationService:
 
     def _admit(self, state):
         request = state["request"]
-        if request.chunk_strategy != "fixed" or request.rerank:
+        if request.chunk_strategy != getattr(
+            self.retriever, "chunk_strategy", "fixed"
+        ) or request.rerank != getattr(self.retriever, "rerank", False):
             raise FinsightError("unsupported_scenario")
         if re.search(
             r"\b(?:forecast|predict|prediction)\b|next year|\bwill\b", request.question, re.I
@@ -184,7 +195,7 @@ class BaselineApplicationService:
         run_id = uuid4().hex
         self._last_id.set(run_id)
         started = self.clock()
-        context = CallContext(run_id, 2, started + self.config.deadline_s, self.clock)
+        context = CallContext(run_id, self.phase, started + self.config.deadline_s, self.clock)
         state = dict(
             request=request,
             context=context,
@@ -223,7 +234,7 @@ class BaselineApplicationService:
             software=software_versions(),
             run_id=run_id,
             budget_id=self.config.budget_id,
-            config_fingerprint=self.config.fingerprint(),
+            config_fingerprint=self.run_fingerprint or self.config.fingerprint(),
             source_fingerprint=self.config.source_fingerprint,
             index_fingerprint=manifest.fingerprint() if manifest else None,
             request_fingerprint=fingerprint(request.model_dump(mode="json")),

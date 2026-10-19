@@ -1,1 +1,1 @@
-"""Reserved: Streamlit presentation through ApplicationService."""
+"""Streamlit presentation through the shared financial-document RAG service."""

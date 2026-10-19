@@ -50,7 +50,10 @@ class DenseRetriever:
         self, request: QueryRequest, context: CallContext
     ) -> tuple[RetrievalCandidate, ...]:
         context.remaining()
-        if request.chunk_strategy != "fixed" or request.rerank:
+        if (
+            request.chunk_strategy != getattr(self.config, "chunk_strategy", "fixed")
+            or request.rerank
+        ):
             raise FinsightError("unsupported_scenario")
         scope = self._scope(request)
         vector = normalize_vector(

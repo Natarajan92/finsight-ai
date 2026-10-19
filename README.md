@@ -1,11 +1,51 @@
 # FinSight AI
 
 Evidence-first financial document intelligence for junior financial analysts,
-using the selected FinanceBench company reports. **Current status: Phase 2 baseline
-implementation verified; real-provider acceptance blocked by an embedding timeout.** Source provenance,
-fixed-token chunks, budgeted embeddings, local dense retrieval, grounded structured
-generation and citation/arithmetic validation are implemented. Streamlit, alternate
-retrieval arms and full evaluation remain later phases.
+using the selected FinanceBench company reports. **The AMD application is available
+locally:** a Streamlit interface over the existing AMD 2022 Form 10-K, with grounded
+answers, inspectable citations, source pages and durable answer replay. One real
+provider answer and restart replay have been verified. This is a single-filing
+vertical slice; the full-corpus acceptance and comparative evaluation remain
+incomplete. See [AMD verification](results/amd-application-smoke.md).
+
+## Run the AMD application
+
+From this repository root, using the existing local filing and prepared index:
+
+```powershell
+uv sync --locked --group dev
+uv run --locked streamlit run streamlit_app.py
+```
+
+Open **http://127.0.0.1:8501**. The source panel identifies the exact filing:
+`AMD_2022_10K`, **121 PDF pages / 313 indexed passages**. Ask a financial question,
+expand its evidence quotes, open the cited PDF page or download the answer JSON.
+The source tab also lets you read extracted pages without provider calls. Displayed
+PDF page numbers start at one; internal citation indices remain zero-based.
+
+**Live answers are off initially.** The verified example, `What was AMD revenue in
+2022?`, can be reopened from this checkout's ignored receipt without enabling
+live calls. Enable **live answers** for a new question. Requests use the existing
+Nebius/Claude configuration, current verified rates and the same testing ledger,
+including its $0.75 Phase 3 cap. A page refresh or a repeated matching question
+revalidates the source, index and saved receipt, without buying another answer.
+An interrupted request stays blocked for inspection; changing a file or deleting
+a receipt is not a supported retry mechanism.
+
+For a fresh checkout, originals and generated assets are intentionally absent.
+Follow source preparation below and the single-document notebook to prepare the
+AMD fixed index. The app accepts either its complete notebook index or an AMD
+scoped experiment index; it does not start ingestion, index builds or downloads
+automatically. Required local assets are the manifest, AMD PDF, verified page and
+tokenizer caches, and complete fixed index with vector references. Live mode also
+requires the two provider keys in `.env`, current rate cards and original budget
+authority. Missing assets produce a setup message. Existing `FINSIGHT_` path
+settings apply; run from the repository root unless those paths are absolute.
+
+Each question is independent and explicitly scoped to the displayed filing.
+Other companies, other AMD filings, four-arm comparisons and the full FinanceBench
+evaluation are outside this delivered slice. Financial accuracy and latency
+targets are not established by the single smoke question.
 
 ## Setup
 

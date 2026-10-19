@@ -309,3 +309,17 @@ def test_all_public_contracts_generate_resolved_json_schemas():
     ]
     for name in names:
         assert model(name).model_json_schema()["title"] == name
+
+
+def test_free_token_count_attempt_serializes_zero_reservation_without_warning():
+    from finsight.contracts.tracing import ProviderAttempt
+
+    attempt = ProviderAttempt(
+        request_id="count-1",
+        run_id="run-1",
+        provider="anthropic",
+        model="synthetic",
+        purpose="free_token_count",
+    )
+    payload = attempt.model_dump_json(warnings="error")
+    assert '"maximum_usd":"0"' in payload
