@@ -98,3 +98,17 @@
 - Remaining: human review, full five-case live gate, B/C/D real assets/comparison,
   human claim-support labels and untouched holdout. The observed output-limit
   issue requires a reviewed follow-up; no target attainment is claimed.
+
+## P4-003 -- Publish Phase 4 for merge review
+
+- **Date:** 2026-10-19 IST; exact message time unavailable.
+- **Exact human prompt:** "push the code changes to github and create pr for merge".
+- This authorizes pushing `feat/phase-4-evaluation` to the existing
+  `Natarajan92/finsight-ai` repository and opening its PR against `main`.
+  It does not request merging the PR. Preserve the executed notebook and
+  unrelated Phase 2 plan edits; neither belongs in this publication.
+- Implementation commit: `48e87727b50e7e92990ab4768ea011f8e070e440`.
+  Reverify the exact committed snapshot before publication. The PR must expose
+  the incomplete 1/5 live evaluation, output-limit error, actual spend and
+  unresolved quality gate; do not imply full evaluation or human acceptance.
+- Publication outcome and fresh checks are reported through Git/PR evidence.
